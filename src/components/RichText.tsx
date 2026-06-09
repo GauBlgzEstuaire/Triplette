@@ -23,6 +23,12 @@ function parseInline(text: string): React.ReactNode[] {
   return parts;
 }
 
+// Detects **Label:** value pattern — returns label and rest separately
+function parseListItem(text: string): { label: string | null; rest: string } {
+  const m = /^\*\*(.+?:)\*\*\s*(.*)$/.exec(text);
+  return m ? { label: m[1], rest: m[2] } : { label: null, rest: text };
+}
+
 // ── Block types ────────────────────────────────────────────────────────────
 
 type CalloutVariant = 'info' | 'success' | 'warning';
@@ -144,18 +150,26 @@ export default function RichText({ content }: { content: string }) {
 
         if (block.type === 'list') {
           return (
-            <ul key={i} style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {block.items.map((item, j) => (
-                <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                  <span style={{
-                    flexShrink: 0, width: 4, height: 4, borderRadius: '50%',
-                    background: 'oklch(45% 0.15 263)', marginTop: 8,
-                  }} />
-                  <span style={{ fontSize: '0.875rem', color: 'oklch(20% 0.006 263)', lineHeight: 1.6 }}>
-                    {parseInline(item)}
-                  </span>
-                </li>
-              ))}
+            <ul key={i} style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {block.items.map((item, j) => {
+                const { label, rest } = parseListItem(item);
+                return (
+                  <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
+                    <span style={{
+                      flexShrink: 0, width: 4, height: 4, borderRadius: '50%',
+                      background: 'oklch(45% 0.15 263)', marginTop: 9,
+                    }} />
+                    <span style={{ fontSize: '0.875rem', color: 'oklch(30% 0.006 263)', lineHeight: 1.6 }}>
+                      {label && (
+                        <span style={{ color: 'oklch(37% 0.185 263)', fontWeight: 600 }}>
+                          {label}{' '}
+                        </span>
+                      )}
+                      {parseInline(rest)}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           );
         }
