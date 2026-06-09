@@ -14,22 +14,60 @@ interface Message {
   ts: Date;
 }
 
-// ── Fixtures ───────────────────────────────────────────────────────────────
+// ── Dummy conversation data ────────────────────────────────────────────────
+// Each entry is a [user prompt, agent reply] pair. Typing one of the prompts
+// (or clicking a starter) cycles through these in order.
 
-const REPLIES = [
-  "Got it. What's the constraint you're most worried about?",
-  "That makes sense. Walk me through the current state first.",
-  "Useful. Who else is involved in this decision?",
-  "Understood. What have you already tried or ruled out?",
-  "Good. What does success look like, and by when?",
-  "Worth separating the immediate problem from the underlying need. Which one are we solving?",
+const EXCHANGES: [string, string][] = [
+  [
+    'Help me plan a product launch',
+    "Good starting point. Before diving into tactics, I need to understand three things: Who is the launch for — existing users, a new segment, or both? What does success look like in 30 days? And what's the one thing competitors are not doing that you could own?\n\nStart with whichever one you have the clearest answer to.",
+  ],
+  [
+    'Review this strategy and find the gaps',
+    "I can do that. Share the document or describe the strategy in your own words — whatever is faster.\n\nWhile you do that, tell me: what has already been challenged internally? I want to know which assumptions the team is confident about versus which ones are still open questions.",
+  ],
+  [
+    'Help me prepare for a difficult conversation',
+    "Let's make this concrete. Who is the conversation with, and what outcome do you need from it?\n\nThen tell me: what do you think the other person wants? That gap — between what you need and what they want — is where most difficult conversations break down.",
+  ],
+  [
+    "Summarize my week and prioritize what's left",
+    "Walk me through the week — what shipped, what got stuck, and what you didn't get to. Don't filter, just list it.\n\nOnce I have the full picture I'll help you sort what actually needs to happen before Friday versus what can move.",
+  ],
+  [
+    "What's the most important thing I should focus on today?",
+    "That depends on one thing: what does a good day look like for you at 6pm?\n\nNot the whole list — just the one thing that would make you feel like today was worth it. Tell me that, and we'll work backwards to make sure it happens.",
+  ],
+  [
+    'Can you help me write a job description?',
+    "Yes. Tell me about the role — not the formal requirements, but the problem this person is being hired to solve.\n\nAlso: what does the first 90 days look like for someone who's doing this job well? Good job descriptions describe outcomes, not just responsibilities.",
+  ],
+  [
+    'I have a board meeting next week',
+    "Let's get you ready. Three questions:\n\nWhat do they most need to understand that they currently don't? What's the one decision you need from them? And what are you most worried they'll push back on?\n\nBoard prep is mostly about anticipating the hard questions before they ask them.",
+  ],
+  [
+    'We need to cut costs but I don\'t know where to start',
+    "Start by separating two lists: costs that are tied to revenue — if you cut them, revenue drops — and costs that aren't.\n\nMost companies overpay on the second list and underpay on the first. What does your spend look like at a high level? Give me the big buckets and I'll help you figure out which ones to look at first.",
+  ],
+];
+
+// Standalone short replies used when the user types something off-script
+const FALLBACK_REPLIES = [
+  "That's a useful frame. What's the most important constraint you're working within?",
+  "Understood. Walk me through what you've already tried or ruled out.",
+  "Good. Who else is involved in this decision, and where do they stand?",
+  "Worth separating the immediate problem from the underlying need. Which one are we solving first?",
+  "Makes sense. What does success look like in 30 days?",
+  "I want to make sure I understand the stakes. What happens if nothing changes?",
 ];
 
 const STARTERS = [
   { label: 'Plan',      text: 'Help me plan a product launch' },
   { label: 'Review',    text: 'Review this strategy and find the gaps' },
   { label: 'Prepare',   text: 'Help me prepare for a difficult conversation' },
-  { label: 'Summarize', text: "Summarize my week and prioritize what's left" },
+  { label: 'Prioritize', text: "Summarize my week and prioritize what's left" },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -37,17 +75,29 @@ const STARTERS = [
 const clock = (d: Date) =>
   d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
+function pickReply(text: string, index: number): string {
+  const match = EXCHANGES.find(([prompt]) =>
+    prompt.toLowerCase().trim() === text.toLowerCase().trim()
+  );
+  if (match) return match[1];
+  return FALLBACK_REPLIES[index % FALLBACK_REPLIES.length];
+}
+
 // ── Avatar ─────────────────────────────────────────────────────────────────
 
-const AVATAR_BG = 'radial-gradient(circle at 38% 34%, oklch(55% 0.16 248), oklch(37% 0.19 263) 55%, oklch(24% 0.14 278))';
+const AVATAR_BG =
+  'radial-gradient(circle at 38% 34%, oklch(55% 0.16 248), oklch(37% 0.19 263) 55%, oklch(24% 0.14 278))';
 
 function Avatar({ size = 26 }: { size?: number }) {
   return (
-    <div aria-hidden="true" style={{
-      width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: AVATAR_BG,
-      boxShadow: '0 0 0 1px oklch(37% 0.185 263 / 0.2)',
-    }} />
+    <div
+      aria-hidden="true"
+      style={{
+        width: size, height: size, borderRadius: '50%', flexShrink: 0,
+        background: AVATAR_BG,
+        boxShadow: '0 0 0 1px oklch(37% 0.185 263 / 0.2)',
+      }}
+    />
   );
 }
 
@@ -60,8 +110,7 @@ function StatusPill({ status }: { status: Status }) {
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '3px 9px', borderRadius: 99,
-      background: 'var(--color-raised)',
-      border: '1px solid var(--color-border)',
+      background: 'var(--color-raised)', border: '1px solid var(--color-border)',
       fontSize: '0.6875rem', fontWeight: 500, color: 'var(--color-ink-3)',
       letterSpacing: '0.01em',
     }}>
@@ -105,7 +154,8 @@ function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
           border: '1px solid var(--color-border)',
           background: 'transparent',
           color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500,
-          cursor: 'pointer', transition: 'all 0.13s',
+          cursor: 'pointer',
+          transition: 'background 0.15s, color 0.15s, border-color 0.15s',
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'var(--color-raised)';
@@ -136,7 +186,9 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
     return (
       <div style={{
         display: 'flex', justifyContent: 'flex-end',
-        ...(fresh ? { animation: 'msg-in 0.18s ease-out forwards' } : {}),
+        ...(fresh ? {
+          animation: 'msg-user-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        } : {}),
       }}>
         <div style={{ maxWidth: '72%', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
           <div style={{
@@ -146,6 +198,7 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
             padding: '10px 14px',
             fontSize: '0.9375rem', lineHeight: 1.6,
             color: 'var(--color-ink)', wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
           }}>
             {m.text}
           </div>
@@ -160,15 +213,21 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
   return (
     <div style={{
       display: 'flex', gap: 12,
-      ...(fresh ? { animation: 'msg-in 0.18s ease-out forwards' } : {}),
+      ...(fresh ? {
+        animation: 'msg-agent-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards',
+      } : {}),
     }}>
       <Avatar size={26} />
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
           <time style={{ fontSize: '0.625rem', color: 'var(--color-ink-4)' }}>{clock(m.ts)}</time>
         </div>
-        <p style={{ margin: 0, fontSize: '0.9375rem', lineHeight: 1.65, color: 'var(--color-ink)', wordBreak: 'break-word' }}>
+        <p style={{
+          margin: 0, fontSize: '0.9375rem', lineHeight: 1.65,
+          color: 'var(--color-ink)', wordBreak: 'break-word',
+          whiteSpace: 'pre-wrap',
+        }}>
           {m.text}
         </p>
       </div>
@@ -176,21 +235,25 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
   );
 }
 
-// ── Typing ─────────────────────────────────────────────────────────────────
+// ── Typing indicator ───────────────────────────────────────────────────────
 
 function Typing() {
   return (
-    <div style={{ display: 'flex', gap: 12, animation: 'msg-in 0.16s ease-out' }}>
+    <div style={{ display: 'flex', gap: 12, animation: 'msg-agent-in 0.18s cubic-bezier(0.23, 1, 0.32, 1)' }}>
       <Avatar size={26} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
         <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
-        <div style={{ display: 'flex', gap: 4, paddingTop: 5 }}>
-          {[0, 0.16, 0.32].map((d, i) => (
-            <span key={i} style={{
-              display: 'block', width: 5, height: 5, borderRadius: '50%',
-              background: 'var(--color-ink-4)',
-              animation: `blink 1.2s ease-in-out ${d}s infinite`,
-            }} />
+        {/* Wave dots — each one staggered 150ms */}
+        <div style={{ display: 'flex', gap: 5, alignItems: 'center', paddingTop: 2 }}>
+          {[0, 0.15, 0.3].map((delay, i) => (
+            <span
+              key={i}
+              style={{
+                display: 'block', width: 5, height: 5, borderRadius: '50%',
+                background: 'var(--color-ink-3)',
+                animation: `dot-wave 1.1s ease-in-out ${delay}s infinite`,
+              }}
+            />
           ))}
         </div>
       </div>
@@ -198,7 +261,7 @@ function Typing() {
   );
 }
 
-// ── Empty ──────────────────────────────────────────────────────────────────
+// ── Empty state ────────────────────────────────────────────────────────────
 
 function Empty({ onPick }: { onPick: (t: string) => void }) {
   return (
@@ -206,7 +269,7 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
       flex: 1, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       padding: '48px 24px',
-      animation: 'fade-in 0.24s ease-out',
+      animation: 'fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
     }}>
       <div style={{ marginBottom: 20 }}>
         <Avatar size={44} />
@@ -214,8 +277,8 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
 
       <h1 style={{
         margin: '0 0 7px', fontSize: '1.125rem', fontWeight: 600,
-        letterSpacing: '-0.02em', color: 'var(--color-ink)', textWrap: 'balance',
-        textAlign: 'center',
+        letterSpacing: '-0.02em', color: 'var(--color-ink)',
+        textWrap: 'balance', textAlign: 'center',
       }}>
         What are you working on?
       </h1>
@@ -227,7 +290,7 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
       </p>
 
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 380 }}>
-        {STARTERS.map(s => (
+        {STARTERS.map((s, i) => (
           <button
             key={s.label}
             onClick={() => onPick(s.text)}
@@ -236,7 +299,10 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
               border: '1px solid var(--color-border)',
               background: 'var(--color-surface)',
               color: 'var(--color-ink-2)', fontSize: '0.8125rem', fontWeight: 500,
-              cursor: 'pointer', transition: 'all 0.13s',
+              cursor: 'pointer',
+              transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
+              /* Stagger the chips in */
+              animation: `fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) ${i * 50}ms both`,
             }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'var(--color-accent)';
@@ -259,7 +325,7 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
   );
 }
 
-// ── Input ──────────────────────────────────────────────────────────────────
+// ── Input bar ──────────────────────────────────────────────────────────────
 
 function Input({ value, onChange, onSend, thinking }: {
   value: string; onChange: (v: string) => void;
@@ -267,7 +333,6 @@ function Input({ value, onChange, onSend, thinking }: {
 }) {
   const ta   = useRef<HTMLTextAreaElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
-  const btn  = useRef<HTMLButtonElement>(null);
   const can  = value.trim().length > 0 && !thinking;
 
   useEffect(() => {
@@ -327,7 +392,7 @@ function Input({ value, onChange, onSend, thinking }: {
           }}
         />
         <button
-          ref={btn}
+          className="send-btn"
           onClick={onSend} disabled={!can} aria-label="Send"
           style={{
             flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: 'none',
@@ -335,19 +400,17 @@ function Input({ value, onChange, onSend, thinking }: {
             color: can ? 'white' : 'var(--color-ink-4)',
             cursor: can ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.15s, box-shadow 0.15s, transform 0.1s',
+            transition: 'background 0.15s, box-shadow 0.15s, transform 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
             boxShadow: can ? 'var(--glow-accent)' : 'none',
           }}
           onMouseEnter={e => {
             if (!can) return;
             e.currentTarget.style.background = 'var(--color-accent-h)';
             e.currentTarget.style.boxShadow = 'var(--glow-accent-h)';
-            e.currentTarget.style.transform = 'scale(1.06)';
           }}
           onMouseLeave={e => {
             e.currentTarget.style.background = can ? 'var(--color-accent)' : 'var(--color-raised)';
             e.currentTarget.style.boxShadow = can ? 'var(--glow-accent)' : 'none';
-            e.currentTarget.style.transform = 'scale(1)';
           }}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
@@ -362,7 +425,7 @@ function Input({ value, onChange, onSend, thinking }: {
   );
 }
 
-// ── Chat ───────────────────────────────────────────────────────────────────
+// ── Chat root ──────────────────────────────────────────────────────────────
 
 export default function Chat() {
   const [msgs, setMsgs]     = useState<Message[]>([]);
@@ -371,8 +434,8 @@ export default function Chat() {
   const [typing, setTyping] = useState(false);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
-  const scrollEl = useRef<HTMLDivElement>(null);
-  const ri       = useRef(0);
+  const scrollEl  = useRef<HTMLDivElement>(null);
+  const replyIdx  = useRef(0);
 
   const toBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -386,25 +449,24 @@ export default function Chat() {
     const t = input.trim();
     if (!t || status === 'thinking') return;
 
-    const u: Message = { id: String(Date.now()), role: 'user', text: t, ts: new Date() };
-    setMsgs(p => [...p, u]);
-    setNewIds(p => new Set([...p, u.id]));
+    const userMsg: Message = { id: String(Date.now()), role: 'user', text: t, ts: new Date() };
+    setMsgs(p => [...p, userMsg]);
+    setNewIds(p => new Set([...p, userMsg.id]));
     setInput('');
     setStatus('thinking');
     setTyping(true);
 
+    // Vary delay slightly so it feels real (not perfectly timed)
+    const delay = 900 + Math.random() * 900;
+
     setTimeout(() => {
-      const a: Message = {
-        id: String(Date.now() + 1), role: 'agent',
-        text: REPLIES[ri.current % REPLIES.length],
-        ts: new Date(),
-      };
-      ri.current++;
+      const reply = pickReply(t, replyIdx.current++);
+      const agentMsg: Message = { id: String(Date.now() + 1), role: 'agent', text: reply, ts: new Date() };
       setTyping(false);
       setStatus('idle');
-      setMsgs(p => [...p, a]);
-      setNewIds(p => new Set([...p, a.id]));
-    }, 1000 + Math.random() * 800);
+      setMsgs(p => [...p, agentMsg]);
+      setNewIds(p => new Set([...p, agentMsg.id]));
+    }, delay);
   }, [input, status]);
 
   return (
@@ -418,7 +480,7 @@ export default function Chat() {
         style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth', display: 'flex', flexDirection: 'column' }}
       >
         {msgs.length === 0
-          ? <Empty onPick={t => { setInput(t); }} />
+          ? <Empty onPick={t => setInput(t)} />
           : (
             <div style={{
               maxWidth: 680, width: '100%', margin: '0 auto',
