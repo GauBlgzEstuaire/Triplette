@@ -630,41 +630,62 @@ export default function Chat() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  const send = useCallback(() => {
+  const send = useCallback(async () => {
     const t = input.trim();
     if (!t || status === 'thinking') return;
 
-    const userMsg: Message = { id: String(Date.now()), role: 'user', text: t, ts: new Date() };
-    setMsgs(p => [...p, userMsg]);
+    const userMsg: Message = { id: crypto.randomUUID(), role: 'user', text: t, ts: new Date() };
+    const history = [...msgs, userMsg];
+    setMsgs(history);
     setNewIds(p => new Set([...p, userMsg.id]));
     setInput('');
     setStatus('thinking');
     setTyping(true);
 
-    const delay = 900 + Math.random() * 900;
     const triggersChart = isChartQuery(t);
+    const chartId = triggersChart ? crypto.randomUUID() : undefined;
+    const now = new Date();
 
-    setTimeout(() => {
-      const chartId = triggersChart ? String(Date.now() + 2) : undefined;
-      const now = new Date();
+    if (triggersChart && chartId) {
+      const spec: ChartSpec = { id: chartId, ...QUARTERLY_CHART };
+      setCharts(p => ({ ...p, [chartId]: spec }));
+      setChartTimestamps(p => ({ ...p, [chartId]: now }));
+    }
 
-      if (triggersChart && chartId) {
-        const spec: ChartSpec = { id: chartId, ...QUARTERLY_CHART };
-        setCharts(p => ({ ...p, [chartId]: spec }));
-        setChartTimestamps(p => ({ ...p, [chartId]: now }));
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: history.map(m => ({ role: m.role, content: m.text })),
+        }),
+      });
+
+      if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
+
+      // Add empty agent message and stream text into it
+      const agentId = crypto.randomUUID();
+      setTyping(false);
+      setMsgs(p => [...p, { id: agentId, role: 'agent', text: '', ts: now, chartId }]);
+      setNewIds(p => new Set([...p, agentId]));
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        full += decoder.decode(value, { stream: true });
+        setMsgs(p => p.map(m => m.id === agentId ? { ...m, text: full } : m));
       }
 
-      const agentMsg: Message = {
-        id: String(Date.now() + 1), role: 'agent',
-        text: pickReply(t, replyIdx.current++),
-        ts: now, chartId,
-      };
-      setTyping(false);
       setStatus('idle');
-      setMsgs(p => [...p, agentMsg]);
-      setNewIds(p => new Set([...p, agentMsg.id]));
-    }, delay);
-  }, [input, status]);
+    } catch (err) {
+      console.error('Chat error:', err);
+      setTyping(false);
+      setStatus('error');
+    }
+  }, [input, status, msgs]);
 
   const expandedChart = expandedChartId ? charts[expandedChartId] : null;
 
