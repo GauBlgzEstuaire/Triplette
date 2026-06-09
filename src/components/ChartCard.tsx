@@ -1,10 +1,19 @@
 'use client';
 
-import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts';
 import type { ChartSpec } from './ChartPanel';
 
 // ── AI summary generator ───────────────────────────────────────────────────
-// Derives a 1–2 sentence insight from the chart data
 
 export function generateSummary(spec: ChartSpec): string {
   const { data } = spec;
@@ -24,6 +33,36 @@ export function generateSummary(spec: ChartSpec): string {
     : `Growth rate peaked at **${peakEntry.growth}%** in ${peakEntry.label}.`;
 
   return `${line1} ${line2}`;
+}
+
+// ── Inline tooltip (minimal, card-sized) ───────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CardTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const byKey = new Map<string, typeof payload[0]>();
+  payload.forEach((e: { dataKey: string }) => byKey.set(e.dataKey, e));
+  const unique = Array.from(byKey.values());
+  return (
+    <div style={{
+      background: 'oklch(100% 0 0)',
+      border: '1px solid oklch(90% 0.006 263)',
+      borderRadius: 8,
+      padding: '7px 10px',
+      boxShadow: '0 4px 16px oklch(0% 0 0 / 0.1)',
+      fontSize: '0.6875rem',
+    }}>
+      <p style={{ margin: '0 0 5px', fontWeight: 600, color: 'oklch(12% 0.004 263)' }}>{label}</p>
+      {unique.map((entry: { dataKey: string; value: number; color: string }) => (
+        <div key={entry.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: entry.color, flexShrink: 0 }} />
+          <span style={{ color: 'oklch(54% 0.006 263)' }}>
+            {entry.dataKey === 'revenue' ? `€${entry.value}M` : `${entry.value}%`}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ── ChartCard ──────────────────────────────────────────────────────────────
@@ -50,7 +89,7 @@ export default function ChartCard({
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 14px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: '12px 14px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{
             margin: 0, fontSize: '0.75rem', fontWeight: 650,
@@ -76,13 +115,93 @@ export default function ChartCard({
         </span>
       </div>
 
-      {/* Mini bar sparkline */}
-      <div style={{ height: 52, padding: '8px 6px 0' }}>
+      {/* Full chart */}
+      <div style={{ height: 190, padding: '0 6px 0 0' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chart.data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap="25%">
-            <Bar dataKey="revenue" fill="oklch(37% 0.185 263)" radius={[2, 2, 0, 0]} animationDuration={600} />
-            <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} height={0} />
-          </BarChart>
+          <ComposedChart data={chart.data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
+            <defs>
+              <linearGradient id={`cardGrad-${chart.id}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="oklch(37% 0.185 263)" stopOpacity={0.18} />
+                <stop offset="95%" stopColor="oklch(37% 0.185 263)" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+
+            <CartesianGrid
+              vertical={false}
+              stroke="oklch(93% 0.004 263)"
+              strokeDasharray="4 4"
+            />
+
+            <XAxis
+              dataKey="label"
+              tick={{ fontSize: 9, fill: 'oklch(60% 0.006 263)', fontFamily: 'inherit' }}
+              axisLine={false}
+              tickLine={false}
+              dy={4}
+            />
+
+            <YAxis
+              yAxisId="rev"
+              orientation="left"
+              tick={{ fontSize: 9, fill: 'oklch(45% 0.15 263)', fontFamily: 'inherit' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={v => `€${v}M`}
+              width={32}
+              dx={-2}
+            />
+
+            <YAxis
+              yAxisId="pct"
+              orientation="right"
+              tick={{ fontSize: 9, fill: 'oklch(58% 0.14 75)', fontFamily: 'inherit' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={v => `${v}%`}
+              width={26}
+              dx={2}
+            />
+
+            <Tooltip
+              content={<CardTooltip />}
+              cursor={{ fill: 'oklch(37% 0.185 263 / 0.05)' }}
+            />
+
+            <Area
+              yAxisId="rev"
+              dataKey="revenue"
+              type="monotone"
+              fill={`url(#cardGrad-${chart.id})`}
+              stroke="none"
+              animationDuration={800}
+              animationEasing="ease-out"
+            />
+
+            <Bar
+              yAxisId="rev"
+              dataKey="revenue"
+              name="Revenue"
+              fill="oklch(37% 0.185 263)"
+              radius={[3, 3, 0, 0]}
+              maxBarSize={28}
+              animationDuration={650}
+              animationEasing="ease-out"
+            />
+
+            <Line
+              yAxisId="pct"
+              dataKey="growth"
+              name="Growth"
+              type="monotone"
+              stroke="oklch(58% 0.14 75)"
+              strokeWidth={2}
+              dot={{ fill: 'oklch(58% 0.14 75)', strokeWidth: 0, r: 3 }}
+              activeDot={{ r: 5, fill: 'oklch(58% 0.14 75)', stroke: 'white', strokeWidth: 1.5 }}
+              animationDuration={800}
+              animationEasing="ease-out"
+              animationBegin={150}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
