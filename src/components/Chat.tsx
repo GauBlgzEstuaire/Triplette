@@ -139,6 +139,13 @@ const STARTERS = [
   { label: 'Prepare',     text: 'Help me prepare for a difficult conversation' },
 ];
 
+// ── Constants ──────────────────────────────────────────────────────────────
+
+const ACCENT         = 'oklch(37% 0.185 263)';
+const ACCENT_H       = 'oklch(32% 0.185 263)';
+// Height of the gradient+input area at the bottom (blend zone + input)
+const BOTTOM_OVERLAY = 192;
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const clock = (d: Date) =>
@@ -161,28 +168,38 @@ function pickReply(text: string, index: number): string {
 const AVATAR_BG =
   'radial-gradient(circle at 38% 34%, oklch(55% 0.16 248), oklch(37% 0.19 263) 55%, oklch(24% 0.14 278))';
 
-function Avatar({ size = 26 }: { size?: number }) {
+function Avatar({ size = 26, dark = false }: { size?: number; dark?: boolean }) {
   return (
     <div aria-hidden="true" style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
-      background: AVATAR_BG, boxShadow: '0 0 0 1px oklch(37% 0.185 263 / 0.2)',
+      background: AVATAR_BG,
+      boxShadow: dark
+        ? '0 0 0 1.5px oklch(100% 0 0 / 0.28)'
+        : '0 0 0 1px oklch(37% 0.185 263 / 0.2)',
     }} />
   );
 }
 
 // ── Status pill ────────────────────────────────────────────────────────────
 
-function StatusPill({ status }: { status: Status }) {
-  const dot = status === 'idle' ? 'var(--color-green)' : status === 'thinking' ? 'var(--color-amber)' : 'var(--color-red)';
+function StatusPill({ status, dark = false }: { status: Status; dark?: boolean }) {
+  const dot =
+    status === 'idle'     ? (dark ? 'oklch(72% 0.2 155)' : 'var(--color-green)')  :
+    status === 'thinking' ? (dark ? 'oklch(80% 0.16 75)'  : 'var(--color-amber)') :
+                            (dark ? 'oklch(72% 0.2 25)'   : 'var(--color-red)');
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '3px 9px', borderRadius: 99,
-      background: 'var(--color-raised)', border: '1px solid var(--color-border)',
-      fontSize: '0.6875rem', fontWeight: 500, color: 'var(--color-ink-3)',
+      background: dark ? 'oklch(100% 0 0 / 0.12)' : 'var(--color-raised)',
+      border:     dark ? '1px solid oklch(100% 0 0 / 0.18)' : '1px solid var(--color-border)',
+      fontSize: '0.6875rem', fontWeight: 500,
+      color: dark ? 'oklch(100% 0 0 / 0.82)' : 'var(--color-ink-3)',
     }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0,
-        boxShadow: status === 'idle' ? '0 0 5px var(--color-green)' : 'none' }} />
+      <span style={{
+        width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0,
+        boxShadow: status === 'idle' ? `0 0 6px ${dot}` : 'none',
+      }} />
       {status === 'idle' ? 'Online' : status === 'thinking' ? 'Thinking' : 'Error'}
     </span>
   );
@@ -191,62 +208,42 @@ function StatusPill({ status }: { status: Status }) {
 // ── Top bar ────────────────────────────────────────────────────────────────
 
 function TopBar({
-  status,
-  chartCount,
-  chartsOpen,
-  onNew,
-  onToggleCharts,
+  status, chartCount, chartsOpen, onNew, onToggleCharts,
 }: {
-  status: Status;
-  chartCount: number;
-  chartsOpen: boolean;
-  onNew: () => void;
-  onToggleCharts: () => void;
+  status: Status; chartCount: number; chartsOpen: boolean;
+  onNew: () => void; onToggleCharts: () => void;
 }) {
   return (
     <header style={{
       height: 52, flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 20px',
-      borderBottom: '1px solid var(--color-border-s)',
-      background: 'var(--color-bg)',
+      background: ACCENT,
+      borderBottom: '1px solid oklch(100% 0 0 / 0.1)',
       zIndex: 10,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Avatar size={22} />
-        <span style={{ fontSize: '0.9375rem', fontWeight: 600, letterSpacing: '-0.018em', color: 'var(--color-ink)' }}>
+        <Avatar size={22} dark />
+        <span style={{ fontSize: '0.9375rem', fontWeight: 600, letterSpacing: '-0.018em', color: 'white' }}>
           Roger
         </span>
-        <StatusPill status={status} />
+        <StatusPill status={status} dark />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {/* My Charts button */}
         {chartCount > 0 && (
           <button
             onClick={onToggleCharts}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '5px 11px', borderRadius: 7,
-              border: `1px solid ${chartsOpen ? 'var(--color-accent)' : 'var(--color-border)'}`,
-              background: chartsOpen ? 'var(--color-accent-m)' : 'transparent',
-              color: chartsOpen ? 'var(--color-accent)' : 'var(--color-ink-3)',
-              fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
+              border: '1px solid oklch(100% 0 0 / 0.25)',
+              background: chartsOpen ? 'oklch(100% 0 0 / 0.18)' : 'transparent',
+              color: 'white', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
               transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
-              boxShadow: chartsOpen ? '0 0 10px oklch(37% 0.185 263 / 0.12)' : 'none',
             }}
-            onMouseEnter={e => {
-              if (chartsOpen) return;
-              e.currentTarget.style.background = 'var(--color-raised)';
-              e.currentTarget.style.color = 'var(--color-ink)';
-              e.currentTarget.style.borderColor = 'var(--color-ink-4)';
-            }}
-            onMouseLeave={e => {
-              if (chartsOpen) return;
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-ink-3)';
-              e.currentTarget.style.borderColor = 'var(--color-border)';
-            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'oklch(100% 0 0 / 0.18)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = chartsOpen ? 'oklch(100% 0 0 / 0.18)' : 'transparent'; }}
           >
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
               <rect x="1" y="5" width="2" height="5" rx="0.5" fill="currentColor" />
@@ -255,7 +252,7 @@ function TopBar({
             </svg>
             My Charts
             <span style={{
-              background: 'var(--color-accent)', color: 'white',
+              background: 'oklch(100% 0 0 / 0.9)', color: ACCENT,
               borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700,
               padding: '1px 5px', lineHeight: 1.4,
             }}>
@@ -264,18 +261,17 @@ function TopBar({
           </button>
         )}
 
-        {/* New conversation */}
         <button
           onClick={onNew}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '5px 11px', borderRadius: 7,
-            border: '1px solid var(--color-border)', background: 'transparent',
-            color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
-            transition: 'background 0.15s, color 0.15s, border-color 0.15s',
+            border: '1px solid oklch(100% 0 0 / 0.25)', background: 'transparent',
+            color: 'oklch(100% 0 0 / 0.82)', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
+            transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-raised)'; e.currentTarget.style.color = 'var(--color-ink)'; e.currentTarget.style.borderColor = 'var(--color-ink-4)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-ink-3)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'oklch(100% 0 0 / 0.15)'; e.currentTarget.style.color = 'white'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'oklch(100% 0 0 / 0.82)'; }}
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
             <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -290,10 +286,7 @@ function TopBar({
 // ── My Charts panel ────────────────────────────────────────────────────────
 
 function MyChartsPanel({
-  charts,
-  chartTimestamps,
-  onClose,
-  onExpand,
+  charts, chartTimestamps, onClose, onExpand,
 }: {
   charts: Record<string, ChartSpec>;
   chartTimestamps: Record<string, Date>;
@@ -301,64 +294,49 @@ function MyChartsPanel({
   onExpand: (id: string) => void;
 }) {
   const entries = Object.values(charts);
-
   return (
     <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, zIndex: 40,
-          background: 'oklch(0% 0 0 / 0.12)',
-          animation: 'fade-in 0.2s ease-out',
-        }}
-      />
-
-      {/* Panel */}
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0, zIndex: 40,
+        background: 'oklch(0% 0 0 / 0.12)',
+        animation: 'fade-in 0.2s ease-out',
+      }} />
       <div style={{
         position: 'fixed', top: 52, right: 0,
         width: 380, height: 'calc(100dvh - 52px)',
         background: 'oklch(100% 0 0)',
         borderLeft: '1px solid oklch(90% 0.006 263)',
         boxShadow: '-12px 0 40px oklch(0% 0 0 / 0.08)',
-        zIndex: 50,
-        display: 'flex', flexDirection: 'column',
+        zIndex: 50, display: 'flex', flexDirection: 'column',
         animation: 'slide-in-right 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
       }}>
-        {/* Header */}
         <div style={{
           height: 52, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 18px',
-          borderBottom: '1px solid oklch(94% 0.004 263)',
+          padding: '0 18px', borderBottom: '1px solid oklch(94% 0.004 263)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
-              <rect x="1" y="6" width="3" height="6" rx="0.7" fill="oklch(37% 0.185 263)" />
-              <rect x="5" y="3.5" width="3" height="8.5" rx="0.7" fill="oklch(37% 0.185 263)" />
-              <rect x="9" y="1" width="3" height="11" rx="0.7" fill="oklch(37% 0.185 263)" />
+              <rect x="1" y="6" width="3" height="6" rx="0.7" fill={ACCENT} />
+              <rect x="5" y="3.5" width="3" height="8.5" rx="0.7" fill={ACCENT} />
+              <rect x="9" y="1" width="3" height="11" rx="0.7" fill={ACCENT} />
             </svg>
             <span style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '-0.015em', color: 'oklch(12% 0.004 263)' }}>
               My Charts
             </span>
             <span style={{
-              background: 'var(--color-accent)', color: 'white',
-              borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700,
-              padding: '2px 6px', lineHeight: 1.4,
+              background: ACCENT, color: 'white',
+              borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700, padding: '2px 6px', lineHeight: 1.4,
             }}>
               {entries.length}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            style={{
-              width: 28, height: 28, borderRadius: 7,
-              border: '1px solid oklch(90% 0.006 263)',
-              background: 'transparent', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'oklch(54% 0.006 263)', transition: 'all 0.13s',
-            }}
+          <button onClick={onClose} aria-label="Close" style={{
+            width: 28, height: 28, borderRadius: 7,
+            border: '1px solid oklch(90% 0.006 263)', background: 'transparent', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'oklch(54% 0.006 263)', transition: 'all 0.13s',
+          }}
             onMouseEnter={e => { e.currentTarget.style.background = 'oklch(96% 0.004 263)'; e.currentTarget.style.color = 'oklch(12% 0.004 263)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'oklch(54% 0.006 263)'; }}
           >
@@ -368,18 +346,12 @@ function MyChartsPanel({
           </button>
         </div>
 
-        {/* Chart list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {entries.length === 0 ? (
-            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-ink-4)', textAlign: 'center', paddingTop: 40 }}>
-              No charts yet
-            </p>
-          ) : entries.map(chart => (
+          {entries.map(chart => (
             <div key={chart.id} style={{
               borderRadius: 10, border: '1px solid oklch(93% 0.004 263)',
               background: 'oklch(99% 0.002 263)', overflow: 'hidden',
             }}>
-              {/* Item header */}
               <div style={{ padding: '12px 14px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 650, letterSpacing: '-0.01em', color: 'oklch(12% 0.004 263)' }}>
@@ -392,45 +364,26 @@ function MyChartsPanel({
                   </p>
                 </div>
                 <span style={{
-                  fontSize: '0.5625rem', fontWeight: 500,
-                  color: 'oklch(45% 0.15 263)',
-                  background: 'oklch(95% 0.025 263)',
-                  border: '1px solid oklch(87% 0.04 263)',
+                  fontSize: '0.5625rem', fontWeight: 500, color: 'oklch(45% 0.15 263)',
+                  background: 'oklch(95% 0.025 263)', border: '1px solid oklch(87% 0.04 263)',
                   borderRadius: 99, padding: '2px 7px', marginTop: 1,
-                }}>
-                  Chart
-                </span>
+                }}>Chart</span>
               </div>
-
-              {/* AI summary */}
               <div style={{ padding: '0 14px 10px', fontSize: '0.75rem', lineHeight: 1.55, color: 'oklch(36% 0.008 263)' }}>
                 <RichText content={generateSummary(chart)} />
               </div>
-
-              {/* Open button */}
               <div style={{ padding: '0 14px 12px' }}>
                 <button
                   onClick={() => { onClose(); onExpand(chart.id); }}
                   style={{
-                    width: '100%', padding: '6px 0',
-                    borderRadius: 7, border: '1px solid oklch(90% 0.006 263)',
-                    background: 'transparent', cursor: 'pointer',
+                    width: '100%', padding: '6px 0', borderRadius: 7,
+                    border: '1px solid oklch(90% 0.006 263)', background: 'transparent', cursor: 'pointer',
                     color: 'oklch(54% 0.006 263)', fontSize: '0.6875rem', fontWeight: 500,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                     transition: 'all 0.13s cubic-bezier(0.23, 1, 0.32, 1)',
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 'oklch(37% 0.185 263)';
-                    e.currentTarget.style.color = 'white';
-                    e.currentTarget.style.borderColor = 'oklch(37% 0.185 263)';
-                    e.currentTarget.style.boxShadow = '0 0 14px oklch(37% 0.185 263 / 0.3)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'oklch(54% 0.006 263)';
-                    e.currentTarget.style.borderColor = 'oklch(90% 0.006 263)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.boxShadow = '0 0 14px oklch(37% 0.185 263 / 0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'oklch(54% 0.006 263)'; e.currentTarget.style.borderColor = 'oklch(90% 0.006 263)'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                   Open full chart
                 </button>
@@ -544,7 +497,7 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
               cursor: 'pointer', transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
               animation: `fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) ${i * 50}ms both`,
             }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-accent)'; e.currentTarget.style.color = 'var(--color-accent)'; e.currentTarget.style.background = 'var(--color-accent-m)'; e.currentTarget.style.boxShadow = '0 0 10px oklch(37% 0.185 263 / 0.12)'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; e.currentTarget.style.background = 'var(--color-accent-m)'; e.currentTarget.style.boxShadow = '0 0 10px oklch(37% 0.185 263 / 0.12)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-ink-2)'; e.currentTarget.style.background = 'var(--color-surface)'; e.currentTarget.style.boxShadow = 'none'; }}
           >
             {s.label}
@@ -555,7 +508,7 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
   );
 }
 
-// ── Input bar ──────────────────────────────────────────────────────────────
+// ── Input bar — liquid glass ───────────────────────────────────────────────
 
 function Input({ value, onChange, onSend, thinking }: {
   value: string; onChange: (v: string) => void; onSend: () => void; thinking: boolean;
@@ -575,33 +528,39 @@ function Input({ value, onChange, onSend, thinking }: {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
   };
 
+  const focusGlow  = 'inset 0 1px 0 oklch(100% 0 0 / 0.35), 0 0 0 3px oklch(100% 0 0 / 0.22), 0 4px 24px oklch(0% 0 0 / 0.18)';
+  const defaultGlow = 'inset 0 1px 0 oklch(100% 0 0 / 0.3), 0 4px 20px oklch(0% 0 0 / 0.14)';
+
   return (
-    <div style={{
-      padding: '12px 20px 20px',
-      borderTop: '1px solid var(--color-border-s)',
-      background: 'oklch(100% 0 0 / 0.92)',
-      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-    }}>
+    <div style={{ padding: '0 20px 20px' }}>
       <div
         ref={wrap}
         style={{
           maxWidth: 680, margin: '0 auto',
           display: 'flex', alignItems: 'center', gap: 8,
-          background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+          background: 'oklch(100% 0 0 / 0.13)',
+          backdropFilter: 'blur(28px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          border: '1px solid oklch(100% 0 0 / 0.28)',
+          boxShadow: defaultGlow,
           borderRadius: 14, padding: '0 10px 0 16px', minHeight: 50,
           transition: 'border-color 0.15s, box-shadow 0.15s',
         }}
-        onFocusCapture={() => { if (wrap.current) { wrap.current.style.borderColor = 'var(--color-accent)'; wrap.current.style.boxShadow = 'var(--glow-focus)'; } }}
-        onBlurCapture ={() => { if (wrap.current) { wrap.current.style.borderColor = 'var(--color-border)'; wrap.current.style.boxShadow = 'none'; } }}
+        onFocusCapture={() => { if (wrap.current) { wrap.current.style.borderColor = 'oklch(100% 0 0 / 0.55)'; wrap.current.style.boxShadow = focusGlow; } }}
+        onBlurCapture ={() => { if (wrap.current) { wrap.current.style.borderColor = 'oklch(100% 0 0 / 0.28)'; wrap.current.style.boxShadow = defaultGlow; } }}
       >
         <textarea
           ref={ta} value={value}
           onChange={e => onChange(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Message Roger…" rows={1} aria-label="Message"
+          placeholder="Message Roger…"
+          rows={1}
+          aria-label="Message"
+          className="glass-textarea"
           style={{
             flex: 1, resize: 'none', border: 'none', outline: 'none',
-            background: 'transparent', color: 'var(--color-ink)',
+            background: 'transparent', color: 'white',
+            caretColor: 'white',
             fontSize: '0.9375rem', lineHeight: 1.55, fontFamily: 'inherit',
             maxHeight: 140, overflowY: 'auto', padding: '13px 0', scrollbarWidth: 'none',
           }}
@@ -611,22 +570,22 @@ function Input({ value, onChange, onSend, thinking }: {
           onClick={onSend} disabled={!can} aria-label="Send"
           style={{
             flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: 'none',
-            background: can ? 'var(--color-accent)' : 'var(--color-raised)',
-            color: can ? 'white' : 'var(--color-ink-4)',
+            background: can ? 'white' : 'oklch(100% 0 0 / 0.12)',
+            color: can ? ACCENT : 'oklch(100% 0 0 / 0.3)',
             cursor: can ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'background 0.15s, box-shadow 0.15s, transform 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
-            boxShadow: can ? 'var(--glow-accent)' : 'none',
+            boxShadow: can ? '0 2px 10px oklch(0% 0 0 / 0.2)' : 'none',
           }}
-          onMouseEnter={e => { if (!can) return; e.currentTarget.style.background = 'var(--color-accent-h)'; e.currentTarget.style.boxShadow = 'var(--glow-accent-h)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = can ? 'var(--color-accent)' : 'var(--color-raised)'; e.currentTarget.style.boxShadow = can ? 'var(--glow-accent)' : 'none'; }}
+          onMouseEnter={e => { if (!can) return; e.currentTarget.style.background = 'oklch(96% 0 0)'; e.currentTarget.style.boxShadow = '0 4px 16px oklch(0% 0 0 / 0.25)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = can ? 'white' : 'oklch(100% 0 0 / 0.12)'; e.currentTarget.style.boxShadow = can ? '0 2px 10px oklch(0% 0 0 / 0.2)' : 'none'; }}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
             <path d="M6.5 11V2M6.5 2L2.5 6M6.5 2L10.5 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </div>
-      <p style={{ margin: '6px 0 0', textAlign: 'center', fontSize: '0.625rem', color: 'var(--color-ink-4)' }}>
+      <p style={{ margin: '7px 0 0', textAlign: 'center', fontSize: '0.625rem', color: 'oklch(100% 0 0 / 0.4)' }}>
         Return to send · Shift+Return for new line
       </p>
     </div>
@@ -658,7 +617,6 @@ export default function Chat() {
 
   useEffect(() => { toBottom(); }, [msgs, typing, toBottom]);
 
-  // Close My Charts panel on Escape
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') { setChartsOpen(false); setExpandedChartId(null); }
@@ -694,8 +652,7 @@ export default function Chat() {
       const agentMsg: Message = {
         id: String(Date.now() + 1), role: 'agent',
         text: pickReply(t, replyIdx.current++),
-        ts: now,
-        chartId,
+        ts: now, chartId,
       };
       setTyping(false);
       setStatus('idle');
@@ -717,32 +674,35 @@ export default function Chat() {
         onToggleCharts={() => setChartsOpen(o => !o)}
       />
 
-      {/* Body */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+      {/* Body — scroll area with gradient+input overlay at bottom */}
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', minHeight: 0 }}>
+
+        {/* Conversation scroll — full height with bottom padding to clear overlay */}
         <div
           ref={scrollEl}
           role="log" aria-live="polite" aria-label="Conversation"
-          style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth', display: 'flex', flexDirection: 'column' }}
+          style={{
+            position: 'absolute', inset: 0,
+            overflowY: 'auto', scrollBehavior: 'smooth',
+            display: 'flex', flexDirection: 'column',
+            paddingBottom: BOTTOM_OVERLAY,
+          }}
         >
           {msgs.length === 0
             ? <Empty onPick={t => setInput(t)} />
             : (
               <div style={{
-                // Two-column layout: conversation (max 680) + chart column (300)
                 maxWidth: hasCharts ? 1032 : 680,
                 width: '100%', margin: '0 auto',
-                padding: '28px 20px 16px',
+                padding: '28px 20px 0',
                 display: 'flex', flexDirection: 'column', gap: 28,
                 transition: 'max-width 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
               }}>
                 {msgs.map(m => (
                   <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-                    {/* Conversation column */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <Msg m={m} fresh={newIds.has(m.id)} />
                     </div>
-
-                    {/* Chart column — fixed 300px, only rendered when hasCharts */}
                     {hasCharts && (
                       <div style={{ width: 300, flexShrink: 0 }}>
                         {m.chartId && charts[m.chartId] && (
@@ -756,7 +716,6 @@ export default function Chat() {
                     )}
                   </div>
                 ))}
-
                 {typing && (
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
                     <div style={{ flex: 1, minWidth: 0 }}><Typing /></div>
@@ -768,7 +727,19 @@ export default function Chat() {
           }
         </div>
 
-        <Input value={input} onChange={setInput} onSend={send} thinking={status === 'thinking'} />
+        {/* Gradient overlay — transparent at top, accent blue at bottom */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          background: `linear-gradient(to bottom, transparent 0%, ${ACCENT} 52%)`,
+          paddingTop: 80,
+          pointerEvents: 'none',
+        }}>
+          {/* Input re-enables pointer events */}
+          <div style={{ pointerEvents: 'all' }}>
+            <Input value={input} onChange={setInput} onSend={send} thinking={status === 'thinking'} />
+          </div>
+        </div>
+
       </div>
 
       {/* My Charts panel */}
@@ -781,7 +752,7 @@ export default function Chat() {
         />
       )}
 
-      {/* ChartPanel — full modal overlay when a card is expanded */}
+      {/* ChartPanel modal */}
       {expandedChart && (
         <div
           onClick={() => setExpandedChartId(null)}
@@ -802,10 +773,7 @@ export default function Chat() {
               animation: 'panel-in 0.28s cubic-bezier(0.23, 1, 0.32, 1)',
             }}
           >
-            <ChartPanel
-              chart={expandedChart}
-              onClose={() => setExpandedChartId(null)}
-            />
+            <ChartPanel chart={expandedChart} onClose={() => setExpandedChartId(null)} />
           </div>
         </div>
       )}
