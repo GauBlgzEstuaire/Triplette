@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import ChartPanel, { QUARTERLY_CHART, type ChartSpec } from './ChartPanel';
+import ChartCard, { generateSummary } from './ChartCard';
 import RichText from './RichText';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -189,7 +190,19 @@ function StatusPill({ status }: { status: Status }) {
 
 // ── Top bar ────────────────────────────────────────────────────────────────
 
-function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
+function TopBar({
+  status,
+  chartCount,
+  chartsOpen,
+  onNew,
+  onToggleCharts,
+}: {
+  status: Status;
+  chartCount: number;
+  chartsOpen: boolean;
+  onNew: () => void;
+  onToggleCharts: () => void;
+}) {
   return (
     <header style={{
       height: 52, flexShrink: 0,
@@ -197,6 +210,7 @@ function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
       padding: '0 20px',
       borderBottom: '1px solid var(--color-border-s)',
       background: 'var(--color-bg)',
+      zIndex: 10,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Avatar size={22} />
@@ -205,37 +219,234 @@ function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
         </span>
         <StatusPill status={status} />
       </div>
-      <button
-        onClick={onNew}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 5,
-          padding: '5px 11px', borderRadius: 7,
-          border: '1px solid var(--color-border)', background: 'transparent',
-          color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
-          transition: 'background 0.15s, color 0.15s, border-color 0.15s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-raised)'; e.currentTarget.style.color = 'var(--color-ink)'; e.currentTarget.style.borderColor = 'var(--color-ink-4)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-ink-3)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
-      >
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-          <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-        New
-      </button>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {/* My Charts button */}
+        {chartCount > 0 && (
+          <button
+            onClick={onToggleCharts}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '5px 11px', borderRadius: 7,
+              border: `1px solid ${chartsOpen ? 'var(--color-accent)' : 'var(--color-border)'}`,
+              background: chartsOpen ? 'var(--color-accent-m)' : 'transparent',
+              color: chartsOpen ? 'var(--color-accent)' : 'var(--color-ink-3)',
+              fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
+              transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
+              boxShadow: chartsOpen ? '0 0 10px oklch(37% 0.185 263 / 0.12)' : 'none',
+            }}
+            onMouseEnter={e => {
+              if (chartsOpen) return;
+              e.currentTarget.style.background = 'var(--color-raised)';
+              e.currentTarget.style.color = 'var(--color-ink)';
+              e.currentTarget.style.borderColor = 'var(--color-ink-4)';
+            }}
+            onMouseLeave={e => {
+              if (chartsOpen) return;
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'var(--color-ink-3)';
+              e.currentTarget.style.borderColor = 'var(--color-border)';
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+              <rect x="1" y="5" width="2" height="5" rx="0.5" fill="currentColor" />
+              <rect x="4.5" y="3" width="2" height="7" rx="0.5" fill="currentColor" />
+              <rect x="8" y="1" width="2" height="9" rx="0.5" fill="currentColor" />
+            </svg>
+            My Charts
+            <span style={{
+              background: 'var(--color-accent)', color: 'white',
+              borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700,
+              padding: '1px 5px', lineHeight: 1.4,
+            }}>
+              {chartCount}
+            </span>
+          </button>
+        )}
+
+        {/* New conversation */}
+        <button
+          onClick={onNew}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '5px 11px', borderRadius: 7,
+            border: '1px solid var(--color-border)', background: 'transparent',
+            color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
+            transition: 'background 0.15s, color 0.15s, border-color 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-raised)'; e.currentTarget.style.color = 'var(--color-ink)'; e.currentTarget.style.borderColor = 'var(--color-ink-4)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--color-ink-3)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          New
+        </button>
+      </div>
     </header>
+  );
+}
+
+// ── My Charts panel ────────────────────────────────────────────────────────
+
+function MyChartsPanel({
+  charts,
+  chartTimestamps,
+  onClose,
+  onExpand,
+}: {
+  charts: Record<string, ChartSpec>;
+  chartTimestamps: Record<string, Date>;
+  onClose: () => void;
+  onExpand: (id: string) => void;
+}) {
+  const entries = Object.values(charts);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 40,
+          background: 'oklch(0% 0 0 / 0.12)',
+          animation: 'fade-in 0.2s ease-out',
+        }}
+      />
+
+      {/* Panel */}
+      <div style={{
+        position: 'fixed', top: 52, right: 0,
+        width: 380, height: 'calc(100dvh - 52px)',
+        background: 'oklch(100% 0 0)',
+        borderLeft: '1px solid oklch(90% 0.006 263)',
+        boxShadow: '-12px 0 40px oklch(0% 0 0 / 0.08)',
+        zIndex: 50,
+        display: 'flex', flexDirection: 'column',
+        animation: 'slide-in-right 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
+      }}>
+        {/* Header */}
+        <div style={{
+          height: 52, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '0 18px',
+          borderBottom: '1px solid oklch(94% 0.004 263)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+              <rect x="1" y="6" width="3" height="6" rx="0.7" fill="oklch(37% 0.185 263)" />
+              <rect x="5" y="3.5" width="3" height="8.5" rx="0.7" fill="oklch(37% 0.185 263)" />
+              <rect x="9" y="1" width="3" height="11" rx="0.7" fill="oklch(37% 0.185 263)" />
+            </svg>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '-0.015em', color: 'oklch(12% 0.004 263)' }}>
+              My Charts
+            </span>
+            <span style={{
+              background: 'var(--color-accent)', color: 'white',
+              borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700,
+              padding: '2px 6px', lineHeight: 1.4,
+            }}>
+              {entries.length}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: 28, height: 28, borderRadius: 7,
+              border: '1px solid oklch(90% 0.006 263)',
+              background: 'transparent', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'oklch(54% 0.006 263)', transition: 'all 0.13s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'oklch(96% 0.004 263)'; e.currentTarget.style.color = 'oklch(12% 0.004 263)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'oklch(54% 0.006 263)'; }}
+          >
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+              <path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Chart list */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {entries.length === 0 ? (
+            <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-ink-4)', textAlign: 'center', paddingTop: 40 }}>
+              No charts yet
+            </p>
+          ) : entries.map(chart => (
+            <div key={chart.id} style={{
+              borderRadius: 10, border: '1px solid oklch(93% 0.004 263)',
+              background: 'oklch(99% 0.002 263)', overflow: 'hidden',
+            }}>
+              {/* Item header */}
+              <div style={{ padding: '12px 14px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 650, letterSpacing: '-0.01em', color: 'oklch(12% 0.004 263)' }}>
+                    {chart.title}
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.5625rem', color: 'oklch(65% 0.004 263)' }}>
+                    {chartTimestamps[chart.id]
+                      ? chartTimestamps[chart.id].toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                      : 'Today'}
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: '0.5625rem', fontWeight: 500,
+                  color: 'oklch(45% 0.15 263)',
+                  background: 'oklch(95% 0.025 263)',
+                  border: '1px solid oklch(87% 0.04 263)',
+                  borderRadius: 99, padding: '2px 7px', marginTop: 1,
+                }}>
+                  Chart
+                </span>
+              </div>
+
+              {/* AI summary */}
+              <div style={{ padding: '0 14px 10px', fontSize: '0.75rem', lineHeight: 1.55, color: 'oklch(36% 0.008 263)' }}>
+                <RichText content={generateSummary(chart)} />
+              </div>
+
+              {/* Open button */}
+              <div style={{ padding: '0 14px 12px' }}>
+                <button
+                  onClick={() => { onClose(); onExpand(chart.id); }}
+                  style={{
+                    width: '100%', padding: '6px 0',
+                    borderRadius: 7, border: '1px solid oklch(90% 0.006 263)',
+                    background: 'transparent', cursor: 'pointer',
+                    color: 'oklch(54% 0.006 263)', fontSize: '0.6875rem', fontWeight: 500,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    transition: 'all 0.13s cubic-bezier(0.23, 1, 0.32, 1)',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'oklch(37% 0.185 263)';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.borderColor = 'oklch(37% 0.185 263)';
+                    e.currentTarget.style.boxShadow = '0 0 14px oklch(37% 0.185 263 / 0.3)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'oklch(54% 0.006 263)';
+                    e.currentTarget.style.borderColor = 'oklch(90% 0.006 263)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  Open full chart
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
 
 // ── Message ────────────────────────────────────────────────────────────────
 
-function Msg({ m, fresh, activeChartId, onViewChart }: {
-  m: Message; fresh: boolean;
-  activeChartId: string | null;
-  onViewChart: (id: string) => void;
-}) {
-  const isUser   = m.role === 'user';
-  const hasChart = !!m.chartId;
-  const chartOpen = m.chartId === activeChartId;
+function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
+  const isUser = m.role === 'user';
 
   if (isUser) {
     return (
@@ -273,42 +484,6 @@ function Msg({ m, fresh, activeChartId, onViewChart }: {
         }}>
           <RichText content={m.text} />
         </div>
-
-        {/* View chart button — shown when chart exists but panel is closed */}
-        {hasChart && !chartOpen && (
-          <button
-            onClick={() => onViewChart(m.chartId!)}
-            style={{
-              alignSelf: 'flex-start', marginTop: 4,
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 11px', borderRadius: 7,
-              border: '1px solid var(--color-border)',
-              background: 'transparent',
-              color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500, cursor: 'pointer',
-              transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
-              animation: 'msg-agent-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'var(--color-accent-m)';
-              e.currentTarget.style.borderColor = 'var(--color-accent)';
-              e.currentTarget.style.color = 'var(--color-accent)';
-              e.currentTarget.style.boxShadow = '0 0 10px oklch(37% 0.185 263 / 0.12)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = 'var(--color-border)';
-              e.currentTarget.style.color = 'var(--color-ink-3)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-              <rect x="1" y="5" width="2" height="5" rx="0.5" fill="currentColor" />
-              <rect x="4.5" y="3" width="2" height="7" rx="0.5" fill="currentColor" />
-              <rect x="8" y="1" width="2" height="9" rx="0.5" fill="currentColor" />
-            </svg>
-            View chart
-          </button>
-        )}
       </div>
     </div>
   );
@@ -461,16 +636,19 @@ function Input({ value, onChange, onSend, thinking }: {
 // ── Chat root ──────────────────────────────────────────────────────────────
 
 export default function Chat() {
-  const [msgs, setMsgs]             = useState<Message[]>([]);
-  const [input, setInput]           = useState('');
-  const [status, setStatus]         = useState<Status>('idle');
-  const [typing, setTyping]         = useState(false);
-  const [newIds, setNewIds]         = useState<Set<string>>(new Set());
-  const [activeChartId, setActiveChartId] = useState<string | null>(null);
-  const [charts, setCharts]         = useState<Record<string, ChartSpec>>({});
+  const [msgs, setMsgs]               = useState<Message[]>([]);
+  const [input, setInput]             = useState('');
+  const [status, setStatus]           = useState<Status>('idle');
+  const [typing, setTyping]           = useState(false);
+  const [newIds, setNewIds]           = useState<Set<string>>(new Set());
+  const [expandedChartId, setExpandedChartId] = useState<string | null>(null);
+  const [chartsOpen, setChartsOpen]   = useState(false);
+  const [charts, setCharts]           = useState<Record<string, ChartSpec>>({});
+  const [chartTimestamps, setChartTimestamps] = useState<Record<string, Date>>({});
 
-  const scrollEl = useRef<HTMLDivElement>(null);
-  const replyIdx = useRef(0);
+  const scrollEl  = useRef<HTMLDivElement>(null);
+  const replyIdx  = useRef(0);
+  const hasCharts = Object.keys(charts).length > 0;
 
   const toBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -480,12 +658,18 @@ export default function Chat() {
 
   useEffect(() => { toBottom(); }, [msgs, typing, toBottom]);
 
+  // Close My Charts panel on Escape
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') { setChartsOpen(false); setExpandedChartId(null); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const send = useCallback(() => {
     const t = input.trim();
     if (!t || status === 'thinking') return;
-
-    // Close any open chart when a new message is sent
-    setActiveChartId(null);
 
     const userMsg: Message = { id: String(Date.now()), role: 'user', text: t, ts: new Date() };
     setMsgs(p => [...p, userMsg]);
@@ -499,17 +683,18 @@ export default function Chat() {
 
     setTimeout(() => {
       const chartId = triggersChart ? String(Date.now() + 2) : undefined;
+      const now = new Date();
 
       if (triggersChart && chartId) {
         const spec: ChartSpec = { id: chartId, ...QUARTERLY_CHART };
         setCharts(p => ({ ...p, [chartId]: spec }));
-        setActiveChartId(chartId);
+        setChartTimestamps(p => ({ ...p, [chartId]: now }));
       }
 
       const agentMsg: Message = {
         id: String(Date.now() + 1), role: 'agent',
         text: pickReply(t, replyIdx.current++),
-        ts: new Date(),
+        ts: now,
         chartId,
       };
       setTyping(false);
@@ -519,66 +704,112 @@ export default function Chat() {
     }, delay);
   }, [input, status]);
 
-  const activeChart = activeChartId ? charts[activeChartId] : null;
+  const expandedChart = expandedChartId ? charts[expandedChartId] : null;
 
   return (
     <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-      <TopBar status={status} onNew={() => { setMsgs([]); setStatus('idle'); setTyping(false); setActiveChartId(null); }} />
+      <TopBar
+        status={status}
+        chartCount={Object.keys(charts).length}
+        chartsOpen={chartsOpen}
+        onNew={() => { setMsgs([]); setStatus('idle'); setTyping(false); setChartsOpen(false); setExpandedChartId(null); }}
+        onToggleCharts={() => setChartsOpen(o => !o)}
+      />
 
-      {/* Body — horizontal split */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+      {/* Body */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        <div
+          ref={scrollEl}
+          role="log" aria-live="polite" aria-label="Conversation"
+          style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth', display: 'flex', flexDirection: 'column' }}
+        >
+          {msgs.length === 0
+            ? <Empty onPick={t => setInput(t)} />
+            : (
+              <div style={{
+                // Two-column layout: conversation (max 680) + chart column (300)
+                maxWidth: hasCharts ? 1032 : 680,
+                width: '100%', margin: '0 auto',
+                padding: '28px 20px 16px',
+                display: 'flex', flexDirection: 'column', gap: 28,
+                transition: 'max-width 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
+              }}>
+                {msgs.map(m => (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
+                    {/* Conversation column */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Msg m={m} fresh={newIds.has(m.id)} />
+                    </div>
 
-        {/* Conversation pane */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-          <div
-            ref={scrollEl}
-            role="log" aria-live="polite" aria-label="Conversation"
-            style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth', display: 'flex', flexDirection: 'column' }}
-          >
-            {msgs.length === 0
-              ? <Empty onPick={t => setInput(t)} />
-              : (
-                <div style={{
-                  maxWidth: 680, width: '100%', margin: '0 auto',
-                  padding: '28px 20px 16px',
-                  display: 'flex', flexDirection: 'column', gap: 28,
-                }}>
-                  {msgs.map(m => (
-                    <Msg
-                      key={m.id} m={m} fresh={newIds.has(m.id)}
-                      activeChartId={activeChartId}
-                      onViewChart={id => setActiveChartId(id)}
-                    />
-                  ))}
-                  {typing && <Typing />}
-                </div>
-              )
-            }
-          </div>
-          <Input value={input} onChange={setInput} onSend={send} thinking={status === 'thinking'} />
+                    {/* Chart column — fixed 300px, only rendered when hasCharts */}
+                    {hasCharts && (
+                      <div style={{ width: 300, flexShrink: 0 }}>
+                        {m.chartId && charts[m.chartId] && (
+                          <ChartCard
+                            chart={charts[m.chartId]}
+                            timestamp={chartTimestamps[m.chartId]}
+                            onExpand={() => setExpandedChartId(m.chartId!)}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {typing && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}><Typing /></div>
+                    {hasCharts && <div style={{ width: 300, flexShrink: 0 }} />}
+                  </div>
+                )}
+              </div>
+            )
+          }
         </div>
 
-        {/* Chart pane — slides in/out */}
-        <div style={{
-          width: activeChart ? '50%' : 0,
-          flexShrink: 0,
-          overflow: 'hidden',
-          borderLeft: activeChart ? '1px solid var(--color-border-s)' : 'none',
-          transition: 'width 0.38s cubic-bezier(0.23, 1, 0.32, 1)',
-        }}>
-          {/* Inner fixed width so content never squishes during the transition */}
-          <div style={{ width: '50vw', height: '100%' }}>
-            {activeChart && (
-              <ChartPanel
-                chart={activeChart}
-                onClose={() => setActiveChartId(null)}
-              />
-            )}
-          </div>
-        </div>
-
+        <Input value={input} onChange={setInput} onSend={send} thinking={status === 'thinking'} />
       </div>
+
+      {/* My Charts panel */}
+      {chartsOpen && (
+        <MyChartsPanel
+          charts={charts}
+          chartTimestamps={chartTimestamps}
+          onClose={() => setChartsOpen(false)}
+          onExpand={id => setExpandedChartId(id)}
+        />
+      )}
+
+      {/* ChartPanel — full modal overlay when a card is expanded */}
+      {expandedChart && (
+        <div
+          onClick={() => setExpandedChartId(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 60,
+            background: 'oklch(0% 0 0 / 0.28)',
+            backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fade-in 0.18s ease-out',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: 'min(940px, 92vw)', height: 'min(600px, 88vh)',
+              borderRadius: 16, overflow: 'hidden',
+              boxShadow: '0 32px 80px oklch(0% 0 0 / 0.22)',
+              animation: 'panel-in 0.28s cubic-bezier(0.23, 1, 0.32, 1)',
+            }}
+          >
+            <ChartPanel
+              chart={expandedChart}
+              onClose={() => setExpandedChartId(null)}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
