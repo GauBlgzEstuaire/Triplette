@@ -313,7 +313,7 @@ export default function ChartPanel({ chart, onClose }: { chart: ChartSpec; onClo
             <YAxis
               yAxisId="rev"
               orientation="left"
-              tick={{ fontSize: 11, fill: 'oklch(60% 0.006 263)', fontFamily: 'inherit' }}
+              tick={{ fontSize: 11, fill: 'oklch(45% 0.15 263)', fontFamily: 'inherit' }}
               axisLine={false}
               tickLine={false}
               tickFormatter={v => `€${v}M`}
@@ -323,7 +323,7 @@ export default function ChartPanel({ chart, onClose }: { chart: ChartSpec; onClo
             <YAxis
               yAxisId="pct"
               orientation="right"
-              tick={{ fontSize: 11, fill: 'oklch(65% 0.13 75)', fontFamily: 'inherit' }}
+              tick={{ fontSize: 11, fill: 'oklch(58% 0.14 75)', fontFamily: 'inherit' }}
               axisLine={false}
               tickLine={false}
               tickFormatter={v => `${v}%`}
