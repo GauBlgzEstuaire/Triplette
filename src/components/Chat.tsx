@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from 'react';
 import ChartPanel, { QUARTERLY_CHART, type ChartSpec } from './ChartPanel';
+import RichText from './RichText';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -29,35 +30,95 @@ const CHART_TRIGGERS = [
 const EXCHANGES: [string, string][] = [
   [
     'Show me our quarterly performance',
-    "Here's a breakdown of revenue and growth over the last 6 quarters. Revenue has grown 283% from Q1 2024 to Q2 2025, with the strongest quarter-on-quarter jump in Q2 2025 at 35%.\n\nA few things stand out:\n— Q3 2024 was the inflection point where growth rate peaked\n— User acquisition has consistently outpaced revenue growth\n— The Q4 2024 dip in growth rate is worth investigating",
+    `📊 Here's a breakdown of your last **6 quarters** of performance.
+
+[success] Revenue reached **€4.6M in Q2 '25** — a **+21%** jump from Q1, the strongest quarter on record.
+
+### Key metrics
+- **Revenue growth:** +283% from Q1 '24 to Q2 '25
+- **Growth rate:** 35% — up **+13pp** from Q1's dip to 22%
+- **Active users:** 17.3K, adding **3.8K** net new this quarter
+
+[warning] The **Q4 '24 growth dip to 28%** is worth investigating — revenue held but momentum slowed for one quarter before recovering strongly.
+
+User acquisition has consistently outpaced revenue, suggesting strong retention and **upsell potential** ahead.`,
   ],
   [
     'Help me plan a product launch',
-    "Good starting point. Before diving into tactics, I need to understand three things: Who is this launch for — existing users, a new segment, or both? What does success look like in 30 days? And what's the one thing competitors are not doing that you could own?\n\nStart with whichever one you have the clearest answer to.",
+    `Good starting point. Before tactics, I need three things.
+
+### Three questions first
+- **Who is this for?** Existing users, a new segment, or both?
+- **What does success look like in 30 days?** Pick one metric — not five.
+- **What's the one thing competitors aren't doing** that you could own?
+
+[info] Start with whichever one you have the clearest answer to — that's your anchor. Everything else will follow from it.`,
   ],
   [
     'Review this strategy and find the gaps',
-    "I can do that. Share the document or describe the strategy in your own words — whatever is faster.\n\nWhile you do that, tell me: what has already been challenged internally? I want to know which assumptions the team is confident about versus which ones are still open questions.",
+    `I can do that. Share the document or describe the strategy in your own words — whatever is faster.
+
+[warning] Before I review it: **what has already been challenged internally?** Knowing which assumptions the team is confident about vs. still open will help me focus on the real gaps, not the obvious ones.
+
+### What I'll look for
+- **Coverage gaps** — areas the strategy doesn't address at all
+- **Assumption risk** — claims that aren't validated by data
+- **Priority conflicts** — where the plan pulls in two directions at once`,
   ],
   [
     'Help me prepare for a difficult conversation',
-    "Let's make this concrete. Who is the conversation with, and what outcome do you need from it?\n\nThen tell me: what do you think the other person wants? That gap — between what you need and what they want — is where most difficult conversations break down.",
+    `Let's make this concrete.
+
+[info] Most difficult conversations break down at the same point: the gap between **what you need** and **what the other person wants**. That's where to focus.
+
+Two things to start:
+- **Who is the conversation with,** and what outcome do you need?
+- **What do you think they want?** Their version of a good outcome.
+
+Once I have both sides, we can work through the framing and anticipate where it gets hard.`,
   ],
   [
     "Summarize my week and prioritize what's left",
-    "Walk me through the week — what shipped, what got stuck, and what you didn't get to. Don't filter, just list it.\n\nOnce I have the full picture I'll help you sort what actually needs to happen before Friday versus what can move.",
+    `Walk me through it — what shipped, what got stuck, and what you didn't get to.
+
+### How to frame it
+- **Shipped** — anything delivered, reviewed, or handed off ✅
+- **Stuck** — work in progress that hit a blocker 🔄
+- **Not started** — planned but didn't happen ❌
+
+[warning] Don't filter yet — just list everything. I'll help you sort what actually needs to happen before Friday vs. what can safely move to next week.`,
   ],
   [
     "What's the most important thing I should focus on today?",
-    "That depends on one thing: what does a good day look like at 6pm?\n\nNot the whole list — just the one thing that would make you feel like today was worth it. Tell me that, and we'll work backwards.",
+    `That depends on one thing: **what does a good day look like at 6pm?**
+
+[info] Not the whole list — just the **one thing** that would make you feel like today was worth it. Tell me that, and we'll work backwards.
+
+Most people have 3–5 things that feel urgent. Usually **only one actually matters today** — the rest can wait or delegate.`,
   ],
   [
     'Can you help me write a job description?',
-    "Yes. Tell me about the role — not the formal requirements, but the problem this person is being hired to solve.\n\nAlso: what does the first 90 days look like for someone who's doing this job well? Good job descriptions describe outcomes, not just responsibilities.",
+    `Yes. Tell me about the role — not the formal requirements, but **the problem this person is being hired to solve.**
+
+[success] The best job descriptions describe **outcomes, not responsibilities.** "Own the growth loop from acquisition to activation" beats "Manage marketing campaigns."
+
+### What we'll cover
+- **The 90-day success story** — what does great look like early on?
+- **Must-haves vs. nice-to-haves** — most JDs inflate both
+- **The honest section** — what's genuinely hard about this role right now?`,
   ],
   [
     'I have a board meeting next week',
-    "Let's get you ready. Three questions:\n\nWhat do they most need to understand that they currently don't? What's the one decision you need from them? And what are you most worried they'll push back on?\n\nBoard prep is mostly about anticipating the hard questions before they ask them.",
+    `Let's get you ready. Three questions to anchor the prep:
+
+### Board prep framework
+- **What do they most need to understand** that they currently don't? 🎯
+- **What's the one decision you need from them?** Be specific.
+- **What are you most worried they'll push back on?** Name it now.
+
+[warning] Board prep is mostly about **anticipating the hard questions** before they ask them. If you can't answer something clearly in the room, practice it here first.
+
+[info] The goal isn't to cover everything — it's to **control the narrative** on the 2–3 things that matter most this quarter.`,
   ],
 ];
 
@@ -207,13 +268,11 @@ function Msg({ m, fresh, activeChartId, onViewChart }: {
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
           <time style={{ fontSize: '0.625rem', color: 'var(--color-ink-4)' }}>{clock(m.ts)}</time>
         </div>
-        <p style={{
-          margin: 0, fontSize: '0.9375rem', lineHeight: 1.65,
-          color: 'var(--color-ink)', wordBreak: 'break-word', whiteSpace: 'pre-wrap',
+        <div style={{
           ...(fresh ? { animation: 'msg-agent-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards' } : {}),
         }}>
-          {m.text}
-        </p>
+          <RichText content={m.text} />
+        </div>
 
         {/* View chart button — shown when chart exists but panel is closed */}
         {hasChart && !chartOpen && (
