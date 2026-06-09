@@ -48,6 +48,36 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* ── Aeronautical chart filigree ─────────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  background-image: url('/chart-bg.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+
+  opacity: 0.09;
+
+  /* Fade from visible at bottom to gone at ~55% up the viewport */
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    black 20%,
+    transparent 58%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    black 20%,
+    transparent 58%
+  );
+}
+
 textarea::-webkit-scrollbar { display: none; }
 
 /* Glass input placeholder — white on accent background */
