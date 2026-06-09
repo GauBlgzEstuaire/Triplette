@@ -49,8 +49,10 @@ export const QUARTERLY_CHART: Omit<ChartSpec, 'id'> = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  // Keep only named series (Area shares dataKey with Bar but has no name)
-  const unique = payload.filter((e: { dataKey: string; name?: string }) => !!e.name);
+  // Deduplicate by dataKey — Bar is defined after Area in JSX so it wins (has name + color)
+  const byKey = new Map<string, typeof payload[0]>();
+  payload.forEach((e: { dataKey: string }) => byKey.set(e.dataKey, e));
+  const unique = Array.from(byKey.values());
   return (
     <div style={{
       background: 'oklch(100% 0 0)',
