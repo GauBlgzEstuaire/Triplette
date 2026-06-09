@@ -211,22 +211,19 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
   }
 
   return (
-    <div style={{
-      display: 'flex', gap: 12,
-      ...(fresh ? {
-        animation: 'msg-agent-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards',
-      } : {}),
-    }}>
+    <div style={{ display: 'flex', gap: 12 }}>
       <Avatar size={26} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
           <time style={{ fontSize: '0.625rem', color: 'var(--color-ink-4)' }}>{clock(m.ts)}</time>
         </div>
+        {/* Only the text animates — avatar and name mount instantly so they don't flash */}
         <p style={{
           margin: 0, fontSize: '0.9375rem', lineHeight: 1.65,
           color: 'var(--color-ink)', wordBreak: 'break-word',
           whiteSpace: 'pre-wrap',
+          ...(fresh ? { animation: 'msg-agent-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) forwards' } : {}),
         }}>
           {m.text}
         </p>
