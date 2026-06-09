@@ -37,36 +37,38 @@ const STARTERS = [
 const clock = (d: Date) =>
   d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-// ── Cursor ─────────────────────────────────────────────────────────────────
+// ── Avatar ─────────────────────────────────────────────────────────────────
 
-function Cursor() {
+const AVATAR_BG = 'radial-gradient(circle at 38% 34%, oklch(55% 0.16 248), oklch(37% 0.19 263) 55%, oklch(24% 0.14 278))';
+
+function Avatar({ size = 26 }: { size?: number }) {
   return (
-    <span style={{
-      display: 'inline-block',
-      width: 2, height: '0.9em',
-      borderRadius: 1,
-      background: 'var(--color-accent)',
-      verticalAlign: 'middle',
-      marginLeft: 3,
-      animation: 'blink 1s ease-in-out infinite',
-    }} aria-hidden="true" />
+    <div aria-hidden="true" style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: AVATAR_BG,
+      boxShadow: '0 0 0 1px oklch(37% 0.185 263 / 0.2)',
+    }} />
   );
 }
 
 // ── Status pill ────────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: Status }) {
-  const color = status === 'idle' ? 'var(--color-green)' : status === 'thinking' ? 'var(--color-amber)' : 'var(--color-red)';
+  const dot = status === 'idle' ? 'var(--color-green)' : status === 'thinking' ? 'var(--color-amber)' : 'var(--color-red)';
   const label = status === 'idle' ? 'Online' : status === 'thinking' ? 'Thinking' : 'Error';
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 5,
-      padding: '2px 8px', borderRadius: 99,
-      background: 'var(--color-surface)',
+      padding: '3px 9px', borderRadius: 99,
+      background: 'var(--color-raised)',
       border: '1px solid var(--color-border)',
-      fontSize: '0.6875rem', color: 'var(--color-ink-2)',
+      fontSize: '0.6875rem', fontWeight: 500, color: 'var(--color-ink-3)',
+      letterSpacing: '0.01em',
     }}>
-      <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      <span style={{
+        width: 5, height: 5, borderRadius: '50%', background: dot, flexShrink: 0,
+        boxShadow: status === 'idle' ? '0 0 5px var(--color-green)' : 'none',
+      }} />
       {label}
     </span>
   );
@@ -77,19 +79,19 @@ function StatusPill({ status }: { status: Status }) {
 function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
   return (
     <header style={{
-      height: 52,
+      height: 52, flexShrink: 0,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 20px',
       borderBottom: '1px solid var(--color-border-s)',
       background: 'var(--color-bg)',
-      flexShrink: 0,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Avatar size={22} />
         <span style={{
-          fontSize: '0.875rem', fontWeight: 550,
-          letterSpacing: '-0.015em', color: 'var(--color-ink)',
+          fontSize: '0.9375rem', fontWeight: 600,
+          letterSpacing: '-0.018em', color: 'var(--color-ink)',
         }}>
-          Triplette
+          Roger
         </span>
         <StatusPill status={status} />
       </div>
@@ -98,24 +100,26 @@ function TopBar({ status, onNew }: { status: Status; onNew: () => void }) {
         onClick={onNew}
         aria-label="New conversation"
         style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          padding: '5px 10px', borderRadius: 7,
+          display: 'flex', alignItems: 'center', gap: 5,
+          padding: '5px 11px', borderRadius: 7,
           border: '1px solid var(--color-border)',
           background: 'transparent',
-          color: 'var(--color-ink-2)', fontSize: '0.75rem',
-          cursor: 'pointer', transition: 'border-color 0.13s, color 0.13s, background 0.13s',
+          color: 'var(--color-ink-3)', fontSize: '0.75rem', fontWeight: 500,
+          cursor: 'pointer', transition: 'all 0.13s',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'var(--color-surface)';
+          e.currentTarget.style.background = 'var(--color-raised)';
           e.currentTarget.style.color = 'var(--color-ink)';
+          e.currentTarget.style.borderColor = 'var(--color-ink-4)';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.color = 'var(--color-ink-2)';
+          e.currentTarget.style.color = 'var(--color-ink-3)';
+          e.currentTarget.style.borderColor = 'var(--color-border)';
         }}
       >
-        <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-          <path d="M5.5 1v9M1 5.5h9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
         New
       </button>
@@ -141,8 +145,7 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
             borderRadius: '12px 12px 3px 12px',
             padding: '10px 14px',
             fontSize: '0.9375rem', lineHeight: 1.6,
-            color: 'var(--color-ink)',
-            wordBreak: 'break-word',
+            color: 'var(--color-ink)', wordBreak: 'break-word',
           }}>
             {m.text}
           </div>
@@ -159,15 +162,10 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
       display: 'flex', gap: 12,
       ...(fresh ? { animation: 'msg-in 0.18s ease-out forwards' } : {}),
     }}>
-      {/* Agent avatar */}
-      <div style={{
-        width: 26, height: 26, borderRadius: '50%', flexShrink: 0, marginTop: 2,
-        background: 'radial-gradient(circle at 36% 32%, oklch(60% 0.12 248), oklch(38% 0.18 262) 58%, oklch(26% 0.12 278))',
-      }} aria-hidden="true" />
-
+      <Avatar size={26} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 550, color: 'var(--color-ink-2)' }}>Triplette</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
           <time style={{ fontSize: '0.625rem', color: 'var(--color-ink-4)' }}>{clock(m.ts)}</time>
         </div>
         <p style={{ margin: 0, fontSize: '0.9375rem', lineHeight: 1.65, color: 'var(--color-ink)', wordBreak: 'break-word' }}>
@@ -183,16 +181,13 @@ function Msg({ m, fresh }: { m: Message; fresh: boolean }) {
 function Typing() {
   return (
     <div style={{ display: 'flex', gap: 12, animation: 'msg-in 0.16s ease-out' }}>
-      <div style={{
-        width: 26, height: 26, borderRadius: '50%', flexShrink: 0, marginTop: 2,
-        background: 'radial-gradient(circle at 36% 32%, oklch(60% 0.12 248), oklch(38% 0.18 262) 58%, oklch(26% 0.12 278))',
-      }} aria-hidden="true" />
+      <Avatar size={26} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: '0.75rem', fontWeight: 550, color: 'var(--color-ink-2)' }}>Triplette</span>
-        <div style={{ display: 'flex', gap: 4, paddingTop: 4 }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-ink-2)' }}>Roger</span>
+        <div style={{ display: 'flex', gap: 4, paddingTop: 5 }}>
           {[0, 0.16, 0.32].map((d, i) => (
             <span key={i} style={{
-              width: 5, height: 5, borderRadius: '50%',
+              display: 'block', width: 5, height: 5, borderRadius: '50%',
               background: 'var(--color-ink-4)',
               animation: `blink 1.2s ease-in-out ${d}s infinite`,
             }} />
@@ -213,47 +208,47 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
       padding: '48px 24px',
       animation: 'fade-in 0.24s ease-out',
     }}>
-      {/* Agent avatar */}
-      <div style={{
-        width: 44, height: 44, borderRadius: '50%', marginBottom: 20,
-        background: 'radial-gradient(circle at 36% 32%, oklch(60% 0.12 248), oklch(38% 0.18 262) 58%, oklch(26% 0.12 278))',
-      }} aria-hidden="true" />
+      <div style={{ marginBottom: 20 }}>
+        <Avatar size={44} />
+      </div>
 
       <h1 style={{
-        margin: '0 0 6px', fontSize: '1.125rem', fontWeight: 550,
-        letterSpacing: '-0.018em', color: 'var(--color-ink)', textWrap: 'balance',
+        margin: '0 0 7px', fontSize: '1.125rem', fontWeight: 600,
+        letterSpacing: '-0.02em', color: 'var(--color-ink)', textWrap: 'balance',
         textAlign: 'center',
       }}>
         What are you working on?
       </h1>
       <p style={{
-        margin: '0 0 32px', fontSize: '0.875rem',
+        margin: '0 0 28px', fontSize: '0.875rem',
         color: 'var(--color-ink-3)', textAlign: 'center',
       }}>
         Ask anything, or start with one of these.
       </p>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 420 }}>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 380 }}>
         {STARTERS.map(s => (
           <button
             key={s.label}
             onClick={() => onPick(s.text)}
             style={{
-              padding: '7px 13px', borderRadius: 99,
+              padding: '7px 14px', borderRadius: 99,
               border: '1px solid var(--color-border)',
               background: 'var(--color-surface)',
-              color: 'var(--color-ink-2)', fontSize: '0.8125rem',
-              cursor: 'pointer', transition: 'border-color 0.12s, color 0.12s, background 0.12s',
+              color: 'var(--color-ink-2)', fontSize: '0.8125rem', fontWeight: 500,
+              cursor: 'pointer', transition: 'all 0.13s',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'var(--color-accent)';
-              e.currentTarget.style.color = 'var(--color-ink)';
+              e.currentTarget.style.color = 'var(--color-accent)';
               e.currentTarget.style.background = 'var(--color-accent-m)';
+              e.currentTarget.style.boxShadow = '0 0 10px oklch(37% 0.185 263 / 0.12)';
             }}
             onMouseLeave={e => {
               e.currentTarget.style.borderColor = 'var(--color-border)';
               e.currentTarget.style.color = 'var(--color-ink-2)';
               e.currentTarget.style.background = 'var(--color-surface)';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             {s.label}
@@ -272,6 +267,7 @@ function Input({ value, onChange, onSend, thinking }: {
 }) {
   const ta   = useRef<HTMLTextAreaElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
+  const btn  = useRef<HTMLButtonElement>(null);
   const can  = value.trim().length > 0 && !thinking;
 
   useEffect(() => {
@@ -300,17 +296,28 @@ function Input({ value, onChange, onSend, thinking }: {
           display: 'flex', alignItems: 'center', gap: 8,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: 13, padding: '0 10px 0 16px',
-          transition: 'border-color 0.13s', minHeight: 50,
+          borderRadius: 14, padding: '0 10px 0 16px',
+          minHeight: 50,
+          transition: 'border-color 0.15s, box-shadow 0.15s',
         }}
-        onFocusCapture={() => { if (wrap.current) wrap.current.style.borderColor = 'var(--color-accent-d)'; }}
-        onBlurCapture={() => { if (wrap.current) wrap.current.style.borderColor = 'var(--color-border)'; }}
+        onFocusCapture={() => {
+          if (wrap.current) {
+            wrap.current.style.borderColor = 'var(--color-accent)';
+            wrap.current.style.boxShadow = 'var(--glow-focus)';
+          }
+        }}
+        onBlurCapture={() => {
+          if (wrap.current) {
+            wrap.current.style.borderColor = 'var(--color-border)';
+            wrap.current.style.boxShadow = 'none';
+          }
+        }}
       >
         <textarea
           ref={ta} value={value}
           onChange={e => onChange(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Message Triplette…" rows={1} aria-label="Message"
+          placeholder="Message Roger…" rows={1} aria-label="Message"
           style={{
             flex: 1, resize: 'none', border: 'none', outline: 'none',
             background: 'transparent', color: 'var(--color-ink)',
@@ -320,6 +327,7 @@ function Input({ value, onChange, onSend, thinking }: {
           }}
         />
         <button
+          ref={btn}
           onClick={onSend} disabled={!can} aria-label="Send"
           style={{
             flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: 'none',
@@ -327,11 +335,20 @@ function Input({ value, onChange, onSend, thinking }: {
             color: can ? 'white' : 'var(--color-ink-4)',
             cursor: can ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.13s, transform 0.1s',
-            fontWeight: 700,
+            transition: 'background 0.15s, box-shadow 0.15s, transform 0.1s',
+            boxShadow: can ? 'var(--glow-accent)' : 'none',
           }}
-          onMouseEnter={e => { if (can) e.currentTarget.style.transform = 'scale(1.07)'; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+          onMouseEnter={e => {
+            if (!can) return;
+            e.currentTarget.style.background = 'var(--color-accent-h)';
+            e.currentTarget.style.boxShadow = 'var(--glow-accent-h)';
+            e.currentTarget.style.transform = 'scale(1.06)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = can ? 'var(--color-accent)' : 'var(--color-raised)';
+            e.currentTarget.style.boxShadow = can ? 'var(--glow-accent)' : 'none';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
             <path d="M6.5 11V2M6.5 2L2.5 6M6.5 2L10.5 6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
