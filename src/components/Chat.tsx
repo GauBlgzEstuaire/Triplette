@@ -267,7 +267,7 @@ function TopBar({
               <rect x="4.5" y="3" width="2" height="7" rx="0.5" fill="currentColor" />
               <rect x="8" y="1" width="2" height="9" rx="0.5" fill="currentColor" />
             </svg>
-            My Charts
+            My Outputs
             <span style={{
               background: 'oklch(100% 0 0 / 0.9)', color: ACCENT,
               borderRadius: 99, fontSize: '0.5625rem', fontWeight: 700,
@@ -339,7 +339,7 @@ function MyChartsPanel({
               <rect x="9" y="1" width="3" height="11" rx="0.7" fill={ACCENT} />
             </svg>
             <span style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '-0.015em', color: 'oklch(12% 0.004 263)' }}>
-              My Charts
+              My Outputs
             </span>
             <span style={{
               background: ACCENT, color: 'white',
