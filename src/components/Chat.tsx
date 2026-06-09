@@ -245,7 +245,6 @@ function TopBar({
         <span style={{ fontSize: '0.9375rem', fontWeight: 600, letterSpacing: '-0.018em', color: 'white' }}>
           Roger
         </span>
-        <StatusPill status={status} dark />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
