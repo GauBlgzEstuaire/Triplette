@@ -642,15 +642,7 @@ export default function Chat() {
     setStatus('thinking');
     setTyping(true);
 
-    const triggersChart = isChartQuery(t);
-    const chartId = triggersChart ? crypto.randomUUID() : undefined;
     const now = new Date();
-
-    if (triggersChart && chartId) {
-      const spec: ChartSpec = { id: chartId, ...QUARTERLY_CHART };
-      setCharts(p => ({ ...p, [chartId]: spec }));
-      setChartTimestamps(p => ({ ...p, [chartId]: now }));
-    }
 
     try {
       const res = await fetch('/api/chat', {
@@ -663,20 +655,70 @@ export default function Chat() {
 
       if (!res.ok || !res.body) throw new Error(`API ${res.status}`);
 
-      // Add empty agent message and stream text into it
       const agentId = crypto.randomUUID();
       setTyping(false);
-      setMsgs(p => [...p, { id: agentId, role: 'agent', text: '', ts: now, chartId }]);
+      setMsgs(p => [...p, { id: agentId, role: 'agent', text: '', ts: now }]);
       setNewIds(p => new Set([...p, agentId]));
 
-      const reader = res.body.getReader();
+      const reader  = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = '';
+      let headerParsed = false;
+      let activeChartId: string | undefined;
       let full = '';
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        full += decoder.decode(value, { stream: true });
+        buffer += decoder.decode(value, { stream: true });
+
+        if (!headerParsed) {
+          const nl = buffer.indexOf('\n');
+          if (nl === -1) continue; // wait for full first line
+
+          const firstLine = buffer.slice(0, nl);
+          buffer = buffer.slice(nl + 1);
+          headerParsed = true;
+
+          if (firstLine.startsWith('CHART:')) {
+            try {
+              const agentData = JSON.parse(firstLine.slice(6)) as {
+                title: string;
+                unit?: string;
+                data: { label: string; value: number }[];
+              };
+              const cid = crypto.randomUUID();
+              activeChartId = cid;
+
+              // Map agent {label, value} → ChartSpec format
+              const specData = agentData.data.map((d, i, arr) => {
+                const prev = arr[i - 1];
+                const growth = prev && prev.value !== 0
+                  ? Math.round(((d.value - prev.value) / prev.value) * 100)
+                  : 0;
+                return { label: d.label, revenue: d.value, growth, users: 0 };
+              });
+
+              const spec: ChartSpec = {
+                id: cid,
+                title: agentData.title,
+                subtitle: agentData.unit ?? '',
+                data: specData,
+              };
+              setCharts(p => ({ ...p, [cid]: spec }));
+              setChartTimestamps(p => ({ ...p, [cid]: now }));
+              setMsgs(p => p.map(m => m.id === agentId ? { ...m, chartId: cid } : m));
+            } catch { /* malformed chart JSON — continue without chart */ }
+          } else {
+            // First line was regular text, include it
+            full += firstLine + '\n';
+          }
+        }
+
+        full += buffer;
+        buffer = '';
         setMsgs(p => p.map(m => m.id === agentId ? { ...m, text: full } : m));
+        void activeChartId; // referenced to avoid lint warning
       }
 
       setStatus('idle');
