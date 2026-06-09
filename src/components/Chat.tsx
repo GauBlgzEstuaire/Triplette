@@ -297,7 +297,7 @@ function Input({ value, onChange, onSend, thinking }: {
         ref={wrap}
         style={{
           maxWidth: 680, margin: '0 auto',
-          display: 'flex', alignItems: 'flex-end', gap: 8,
+          display: 'flex', alignItems: 'center', gap: 8,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
           borderRadius: 13, padding: '0 10px 0 16px',
@@ -316,7 +316,7 @@ function Input({ value, onChange, onSend, thinking }: {
             background: 'transparent', color: 'var(--color-ink)',
             fontSize: '0.9375rem', lineHeight: 1.55, fontFamily: 'inherit',
             maxHeight: 140, overflowY: 'auto', padding: '13px 0',
-            alignSelf: 'center',
+            scrollbarWidth: 'none',
           }}
         />
         <button

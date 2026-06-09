@@ -37,6 +37,7 @@ body {
   line-height: 1.65;
 }
 
+textarea::-webkit-scrollbar  { display: none; }
 ::-webkit-scrollbar          { width: 3px; }
 ::-webkit-scrollbar-track    { background: transparent; }
 ::-webkit-scrollbar-thumb    { background: var(--color-border); border-radius: 2px; }
