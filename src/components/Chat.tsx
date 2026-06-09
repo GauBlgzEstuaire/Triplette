@@ -545,9 +545,9 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
 function Input({ value, onChange, onSend, thinking }: {
   value: string; onChange: (v: string) => void; onSend: () => void; thinking: boolean;
 }) {
-  const ta   = useRef<HTMLTextAreaElement>(null);
-  const wrap = useRef<HTMLDivElement>(null);
-  const can  = value.trim().length > 0 && !thinking;
+  const ta      = useRef<HTMLTextAreaElement>(null);
+  const can     = value.trim().length > 0 && !thinking;
+  const [focused, setFocused] = useState(false);
 
   useEffect(() => {
     const el = ta.current;
@@ -560,26 +560,26 @@ function Input({ value, onChange, onSend, thinking }: {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
   };
 
-  const focusGlow  = 'inset 0 1px 0 oklch(100% 0 0 / 0.35), 0 0 0 3px oklch(100% 0 0 / 0.22), 0 4px 24px oklch(0% 0 0 / 0.18)';
-  const defaultGlow = 'inset 0 1px 0 oklch(100% 0 0 / 0.3), 0 4px 20px oklch(0% 0 0 / 0.14)';
-
   return (
     <div style={{ padding: '0 20px 20px' }}>
       <div
-        ref={wrap}
+        className={`glass-input-wrap${focused ? ' glow-active' : ''}`}
         style={{
           maxWidth: 680, margin: '0 auto',
           display: 'flex', alignItems: 'center', gap: 8,
-          background: 'oklch(100% 0 0 / 0.13)',
           backdropFilter: 'blur(28px) saturate(180%)',
           WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-          border: '1px solid oklch(100% 0 0 / 0.28)',
-          boxShadow: defaultGlow,
           borderRadius: 14, padding: '0 10px 0 16px', minHeight: 50,
-          transition: 'border-color 0.15s, box-shadow 0.15s',
+          // Border/background/shadow omitted when focused — CSS .glow-active owns them
+          ...(!focused ? {
+            background: 'oklch(100% 0 0 / 0.13)',
+            border: '1px solid oklch(100% 0 0 / 0.28)',
+            boxShadow: 'inset 0 1px 0 oklch(100% 0 0 / 0.3), 0 4px 20px oklch(0% 0 0 / 0.14)',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+          } : {}),
         }}
-        onFocusCapture={() => { if (wrap.current) { wrap.current.style.borderColor = 'oklch(100% 0 0 / 0.55)'; wrap.current.style.boxShadow = focusGlow; } }}
-        onBlurCapture ={() => { if (wrap.current) { wrap.current.style.borderColor = 'oklch(100% 0 0 / 0.28)'; wrap.current.style.boxShadow = defaultGlow; } }}
+        onFocusCapture={() => setFocused(true)}
+        onBlurCapture={() => setFocused(false)}
       >
         <textarea
           ref={ta} value={value}

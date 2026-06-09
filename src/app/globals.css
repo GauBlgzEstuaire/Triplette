@@ -52,6 +52,54 @@ textarea::-webkit-scrollbar { display: none; }
 
 /* Glass input placeholder — white on accent background */
 .glass-textarea::placeholder { color: oklch(100% 0 0 / 0.42); }
+
+/* ── Rotating glow border ─────────────────────────────────────────────────── */
+/* Registered custom property lets CSS animate the conic-gradient angle */
+@property --glow-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes glow-spin {
+  to { --glow-angle: 360deg; }
+}
+
+/*
+ * When focused, inline border/background/boxShadow are intentionally absent
+ * so this class can own them via the background-clip trick.
+ * Two background layers:
+ *   1. solid glass fill  → clipped to padding-box (covers the content area)
+ *   2. conic spark       → clipped to border-box  (visible only in the border strip)
+ */
+.glass-input-wrap.glow-active {
+  animation: glow-spin 2.8s linear infinite;
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(oklch(100% 0 0 / 0.14), oklch(100% 0 0 / 0.14)),
+    conic-gradient(
+      from var(--glow-angle),
+      oklch(100% 0 0 / 0.06)      0deg,
+      oklch(100% 0 0 / 0.06)    290deg,
+      oklch(72% 0.22 263 / 0.55) 322deg,
+      white                      347deg,
+      oklch(72% 0.22 263 / 0.40) 357deg,
+      oklch(100% 0 0 / 0.06)    360deg
+    );
+  background-origin: padding-box, border-box;
+  background-clip:   padding-box, border-box;
+  box-shadow: 0 0 28px oklch(60% 0.2 263 / 0.22), inset 0 1px 0 oklch(100% 0 0 / 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-input-wrap.glow-active {
+    animation: none;
+    border: 1.5px solid oklch(100% 0 0 / 0.55);
+    background-image: none;
+    background: oklch(100% 0 0 / 0.16);
+    box-shadow: 0 0 0 3px oklch(100% 0 0 / 0.2), inset 0 1px 0 oklch(100% 0 0 / 0.28);
+  }
+}
 ::-webkit-scrollbar         { width: 3px; }
 ::-webkit-scrollbar-track   { background: transparent; }
 ::-webkit-scrollbar-thumb   { background: var(--color-border); border-radius: 2px; }
