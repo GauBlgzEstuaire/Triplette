@@ -2,31 +2,34 @@
 
 import React from 'react';
 
-// ── Inline parser ──────────────────────────────────────────────────────────
-// Handles **bold** — emojis pass through naturally as unicode
+// ── Inline parsers ─────────────────────────────────────────────────────────
 
+// Paragraphs / headings: bold stays dark
 function parseInline(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   const re = /\*\*(.+?)\*\*/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
+  let last = 0, m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(
-      <strong key={m.index} style={{ fontWeight: 650, color: 'oklch(12% 0.004 263)' }}>
-        {m[1]}
-      </strong>
-    );
+    parts.push(<strong key={m.index} style={{ fontWeight: 650, color: 'oklch(12% 0.004 263)' }}>{m[1]}</strong>);
     last = re.lastIndex;
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts;
 }
 
-// Detects **Label:** value pattern — returns label and rest separately
-function parseListItem(text: string): { label: string | null; rest: string } {
-  const m = /^\*\*(.+?:)\*\*\s*(.*)$/.exec(text);
-  return m ? { label: m[1], rest: m[2] } : { label: null, rest: text };
+// List items: bold is always accent blue for visual consistency
+function parseInlineList(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const re = /\*\*(.+?)\*\*/g;
+  let last = 0, m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    parts.push(<strong key={m.index} style={{ fontWeight: 650, color: 'oklch(37% 0.185 263)' }}>{m[1]}</strong>);
+    last = re.lastIndex;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
 }
 
 // ── Block types ────────────────────────────────────────────────────────────
@@ -151,25 +154,17 @@ export default function RichText({ content }: { content: string }) {
         if (block.type === 'list') {
           return (
             <ul key={i} style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {block.items.map((item, j) => {
-                const { label, rest } = parseListItem(item);
-                return (
-                  <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
-                    <span style={{
-                      flexShrink: 0, width: 4, height: 4, borderRadius: '50%',
-                      background: 'oklch(45% 0.15 263)', marginTop: 9,
-                    }} />
-                    <span style={{ fontSize: '0.875rem', color: 'oklch(30% 0.006 263)', lineHeight: 1.6 }}>
-                      {label && (
-                        <span style={{ color: 'oklch(37% 0.185 263)', fontWeight: 600 }}>
-                          {label}{' '}
-                        </span>
-                      )}
-                      {parseInline(rest)}
-                    </span>
-                  </li>
-                );
-              })}
+              {block.items.map((item, j) => (
+                <li key={j} style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
+                  <span style={{
+                    flexShrink: 0, width: 4, height: 4, borderRadius: '50%',
+                    background: 'oklch(45% 0.15 263)', marginTop: 9,
+                  }} />
+                  <span style={{ fontSize: '0.875rem', color: 'oklch(30% 0.006 263)', lineHeight: 1.6 }}>
+                    {parseInlineList(item)}
+                  </span>
+                </li>
+              ))}
             </ul>
           );
         }
