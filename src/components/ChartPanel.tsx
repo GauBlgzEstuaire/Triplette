@@ -49,12 +49,8 @@ export const QUARTERLY_CHART: Omit<ChartSpec, 'id'> = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
-  const seen = new Set<string>();
-  const unique = payload.filter((e: { dataKey: string }) => {
-    if (seen.has(e.dataKey)) return false;
-    seen.add(e.dataKey);
-    return true;
-  });
+  // Keep only named series (Area shares dataKey with Bar but has no name)
+  const unique = payload.filter((e: { dataKey: string; name?: string }) => !!e.name);
   return (
     <div style={{
       background: 'oklch(100% 0 0)',
