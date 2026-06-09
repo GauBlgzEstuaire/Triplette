@@ -289,7 +289,7 @@ function Input({ value, onChange, onSend, thinking }: {
     <div style={{
       padding: '12px 20px 20px',
       borderTop: '1px solid var(--color-border-s)',
-      background: 'oklch(12% 0.006 258 / 0.94)',
+      background: 'oklch(100% 0 0 / 0.92)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
     }}>
@@ -300,8 +300,8 @@ function Input({ value, onChange, onSend, thinking }: {
           display: 'flex', alignItems: 'flex-end', gap: 8,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: 13, padding: '10px 10px 10px 16px',
-          transition: 'border-color 0.13s',
+          borderRadius: 13, padding: '0 10px 0 16px',
+          transition: 'border-color 0.13s', minHeight: 50,
         }}
         onFocusCapture={() => { if (wrap.current) wrap.current.style.borderColor = 'var(--color-accent-d)'; }}
         onBlurCapture={() => { if (wrap.current) wrap.current.style.borderColor = 'var(--color-border)'; }}
@@ -315,7 +315,8 @@ function Input({ value, onChange, onSend, thinking }: {
             flex: 1, resize: 'none', border: 'none', outline: 'none',
             background: 'transparent', color: 'var(--color-ink)',
             fontSize: '0.9375rem', lineHeight: 1.55, fontFamily: 'inherit',
-            maxHeight: 140, overflowY: 'auto', padding: 0,
+            maxHeight: 140, overflowY: 'auto', padding: '13px 0',
+            alignSelf: 'center',
           }}
         />
         <button
@@ -323,7 +324,7 @@ function Input({ value, onChange, onSend, thinking }: {
           style={{
             flexShrink: 0, width: 32, height: 32, borderRadius: '50%', border: 'none',
             background: can ? 'var(--color-accent)' : 'var(--color-raised)',
-            color: can ? 'oklch(12% 0.006 258)' : 'var(--color-ink-4)',
+            color: can ? 'white' : 'var(--color-ink-4)',
             cursor: can ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'background 0.13s, transform 0.1s',
@@ -397,13 +398,13 @@ export default function Chat() {
       <div
         ref={scrollEl}
         role="log" aria-live="polite" aria-label="Conversation"
-        style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth' }}
+        style={{ flex: 1, overflowY: 'auto', scrollBehavior: 'smooth', display: 'flex', flexDirection: 'column' }}
       >
         {msgs.length === 0
           ? <Empty onPick={t => { setInput(t); }} />
           : (
             <div style={{
-              maxWidth: 680, margin: '0 auto',
+              maxWidth: 680, width: '100%', margin: '0 auto',
               padding: '28px 20px 16px',
               display: 'flex', flexDirection: 'column', gap: 28,
             }}>
