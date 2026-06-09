@@ -49,6 +49,12 @@ export const QUARTERLY_CHART: Omit<ChartSpec, 'id'> = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
+  const seen = new Set<string>();
+  const unique = payload.filter((e: { dataKey: string }) => {
+    if (seen.has(e.dataKey)) return false;
+    seen.add(e.dataKey);
+    return true;
+  });
   return (
     <div style={{
       background: 'oklch(100% 0 0)',
@@ -62,7 +68,7 @@ function ChartTooltip({ active, payload, label }: any) {
       <p style={{ margin: '0 0 8px', fontWeight: 600, color: 'oklch(12% 0.004 263)', letterSpacing: '-0.01em' }}>
         {label}
       </p>
-      {payload.map((entry: { dataKey: string; name: string; value: number; color: string }) => (
+      {unique.map((entry: { dataKey: string; name: string; value: number; color: string }) => (
         <div key={entry.dataKey} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: entry.color as string, flexShrink: 0 }} />
           <span style={{ color: 'oklch(54% 0.006 263)' }}>{entry.name}</span>
