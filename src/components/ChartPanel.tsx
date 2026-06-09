@@ -335,6 +335,7 @@ export default function ChartPanel({ chart, onClose }: { chart: ChartSpec; onClo
             <Area
               yAxisId="rev"
               dataKey="revenue"
+              type="monotone"
               fill="url(#revenueGrad)"
               stroke="none"
               animationDuration={900}
@@ -358,6 +359,7 @@ export default function ChartPanel({ chart, onClose }: { chart: ChartSpec; onClo
               yAxisId="pct"
               dataKey="growth"
               name="Growth"
+              type="monotone"
               stroke="oklch(58% 0.14 75)"
               strokeWidth={2.5}
               dot={{ fill: 'oklch(58% 0.14 75)', strokeWidth: 0, r: 4 }}
