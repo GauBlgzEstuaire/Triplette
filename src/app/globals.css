@@ -78,10 +78,29 @@ textarea::-webkit-scrollbar { display: none; }
   30%            { transform: translateY(-5px); opacity: 1;    }
 }
 
-/* Empty state fade */
+/* Generic opacity+translateY fade */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* Boot — top bar slides in from above */
+@keyframes topbar-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0);     }
+}
+
+/* Boot — elements rise up from below */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Boot — spring pop for focal elements (avatar, logo) */
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.78); }
+  55%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1);    }
 }
 
 /* ── Send button press ──────────────────────────────────────────────────── */
@@ -122,4 +141,7 @@ textarea::-webkit-scrollbar { display: none; }
   @keyframes dot-wave       { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
   @keyframes fade-in        { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slide-in-right { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes topbar-in      { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes rise-in        { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop-in         { from { opacity: 0; } to { opacity: 1; } }
 }

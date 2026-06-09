@@ -144,7 +144,24 @@ const STARTERS = [
 const ACCENT         = 'oklch(37% 0.185 263)';
 const ACCENT_H       = 'oklch(32% 0.185 263)';
 // Height of the gradient+input area at the bottom (blend zone + input)
-const BOTTOM_OVERLAY = 192;
+const BOTTOM_OVERLAY = 230;
+
+// Multi-stop gradient that approximates an ease-in curve:
+// near-invisible at the top, gradually solidifying toward the input.
+const BOTTOM_GRADIENT = [
+  'transparent                      0%',
+  'oklch(42% 0.16 263 / 0.03)      12%',
+  'oklch(41% 0.165 263 / 0.10)     24%',
+  'oklch(40% 0.17 263  / 0.24)     37%',
+  'oklch(39% 0.175 263 / 0.46)     51%',
+  'oklch(38% 0.18 263  / 0.70)     65%',
+  'oklch(37% 0.185 263 / 0.88)     78%',
+  'oklch(37% 0.185 263             ) 90%',
+].join(', ');
+
+// Shared easing strings
+const EASE_OUT    = 'cubic-bezier(0.23, 1, 0.32, 1)';
+const EASE_SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -221,6 +238,7 @@ function TopBar({
       background: ACCENT,
       borderBottom: '1px solid oklch(100% 0 0 / 0.1)',
       zIndex: 10,
+      animation: `topbar-in 0.42s ${EASE_OUT} both`,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Avatar size={22} dark />
@@ -472,19 +490,34 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
       flex: 1, display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       padding: '48px 24px',
-      animation: 'fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
     }}>
-      <div style={{ marginBottom: 20 }}><Avatar size={44} /></div>
+      {/* Avatar — spring pop, focal point of the boot sequence */}
+      <div style={{
+        marginBottom: 20,
+        animation: `pop-in 0.52s ${EASE_SPRING} 120ms both`,
+      }}>
+        <Avatar size={44} />
+      </div>
+
+      {/* Heading — rises up after avatar settles */}
       <h1 style={{
         margin: '0 0 7px', fontSize: '1.125rem', fontWeight: 600,
         letterSpacing: '-0.02em', color: 'var(--color-ink)',
         textWrap: 'balance', textAlign: 'center',
+        animation: `rise-in 0.4s ${EASE_OUT} 210ms both`,
       }}>
         What are you working on?
       </h1>
-      <p style={{ margin: '0 0 28px', fontSize: '0.875rem', color: 'var(--color-ink-3)', textAlign: 'center' }}>
+
+      {/* Subtitle — follows heading with a short offset */}
+      <p style={{
+        margin: '0 0 28px', fontSize: '0.875rem', color: 'var(--color-ink-3)', textAlign: 'center',
+        animation: `rise-in 0.38s ${EASE_OUT} 270ms both`,
+      }}>
         Ask anything, or start with one of these.
       </p>
+
+      {/* Starter buttons — cascade one by one */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 420 }}>
         {STARTERS.map((s, i) => (
           <button
@@ -494,8 +527,8 @@ function Empty({ onPick }: { onPick: (t: string) => void }) {
               padding: '7px 14px', borderRadius: 99,
               border: '1px solid var(--color-border)', background: 'var(--color-surface)',
               color: 'var(--color-ink-2)', fontSize: '0.8125rem', fontWeight: 500,
-              cursor: 'pointer', transition: 'all 0.15s cubic-bezier(0.23, 1, 0.32, 1)',
-              animation: `fade-in 0.3s cubic-bezier(0.23, 1, 0.32, 1) ${i * 50}ms both`,
+              cursor: 'pointer', transition: `all 0.15s ${EASE_OUT}`,
+              animation: `rise-in 0.36s ${EASE_OUT} ${330 + i * 55}ms both`,
             }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; e.currentTarget.style.background = 'var(--color-accent-m)'; e.currentTarget.style.boxShadow = '0 0 10px oklch(37% 0.185 263 / 0.12)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-ink-2)'; e.currentTarget.style.background = 'var(--color-surface)'; e.currentTarget.style.boxShadow = 'none'; }}
@@ -727,15 +760,18 @@ export default function Chat() {
           }
         </div>
 
-        {/* Gradient overlay — transparent at top, accent blue at bottom */}
+        {/* Gradient overlay — eased multi-stop, transparent → accent */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: `linear-gradient(to bottom, transparent 0%, ${ACCENT} 52%)`,
-          paddingTop: 80,
+          background: `linear-gradient(to bottom, ${BOTTOM_GRADIENT})`,
+          paddingTop: 110,
           pointerEvents: 'none',
         }}>
-          {/* Input re-enables pointer events */}
-          <div style={{ pointerEvents: 'all' }}>
+          {/* Input re-enables pointer events; boot animation rises from below */}
+          <div style={{
+            pointerEvents: 'all',
+            animation: `rise-in 0.52s ${EASE_OUT} 80ms both`,
+          }}>
             <Input value={input} onChange={setInput} onSend={send} thinking={status === 'thinking'} />
           </div>
         </div>
