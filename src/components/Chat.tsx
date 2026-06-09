@@ -320,7 +320,7 @@ function MyChartsPanel({
       }} />
       <div style={{
         position: 'fixed', top: 52, right: 0,
-        width: 380, height: 'calc(100dvh - 52px)',
+        width: 660, height: 'calc(100dvh - 52px)',
         background: 'oklch(100% 0 0)',
         borderLeft: '1px solid oklch(90% 0.006 263)',
         boxShadow: '-12px 0 40px oklch(0% 0 0 / 0.08)',
@@ -363,48 +363,21 @@ function MyChartsPanel({
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{
+          flex: 1, overflowY: 'auto', padding: '16px 18px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 14,
+          alignItems: 'start',
+          alignContent: 'start',
+        }}>
           {entries.map(chart => (
-            <div key={chart.id} style={{
-              borderRadius: 10, border: '1px solid oklch(93% 0.004 263)',
-              background: 'oklch(99% 0.002 263)', overflow: 'hidden',
-            }}>
-              <div style={{ padding: '12px 14px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 650, letterSpacing: '-0.01em', color: 'oklch(12% 0.004 263)' }}>
-                    {chart.title}
-                  </p>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.5625rem', color: 'oklch(65% 0.004 263)' }}>
-                    {chartTimestamps[chart.id]
-                      ? chartTimestamps[chart.id].toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : 'Today'}
-                  </p>
-                </div>
-                <span style={{
-                  fontSize: '0.5625rem', fontWeight: 500, color: 'oklch(45% 0.15 263)',
-                  background: 'oklch(95% 0.025 263)', border: '1px solid oklch(87% 0.04 263)',
-                  borderRadius: 99, padding: '2px 7px', marginTop: 1,
-                }}>Chart</span>
-              </div>
-              <div style={{ padding: '0 14px 10px', fontSize: '0.75rem', lineHeight: 1.55, color: 'oklch(36% 0.008 263)' }}>
-                <RichText content={generateSummary(chart)} />
-              </div>
-              <div style={{ padding: '0 14px 12px' }}>
-                <button
-                  onClick={() => { onClose(); onExpand(chart.id); }}
-                  style={{
-                    width: '100%', padding: '6px 0', borderRadius: 7,
-                    border: '1px solid oklch(90% 0.006 263)', background: 'transparent', cursor: 'pointer',
-                    color: 'oklch(54% 0.006 263)', fontSize: '0.6875rem', fontWeight: 500,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    transition: 'all 0.13s cubic-bezier(0.23, 1, 0.32, 1)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.boxShadow = '0 0 14px oklch(37% 0.185 263 / 0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'oklch(54% 0.006 263)'; e.currentTarget.style.borderColor = 'oklch(90% 0.006 263)'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  Open full chart
-                </button>
-              </div>
+            <div key={chart.id} style={{ width: '100%' }}>
+              <ChartCard
+                chart={chart}
+                timestamp={chartTimestamps[chart.id]}
+                onExpand={() => { onClose(); onExpand(chart.id); }}
+              />
             </div>
           ))}
         </div>

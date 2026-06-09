@@ -79,7 +79,7 @@ export default function ChartCard({
   return (
     <div
       style={{
-        width: 300,
+        width: '100%',
         borderRadius: 12,
         border: '1px solid oklch(90% 0.006 263)',
         background: 'oklch(100% 0 0)',
