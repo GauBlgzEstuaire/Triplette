@@ -697,36 +697,31 @@ export default function Chat() {
             ? <Empty onPick={t => setInput(t)} />
             : (
               <div style={{
-                maxWidth: hasCharts ? 1032 : 680,
+                maxWidth: 680,
                 width: '100%', margin: '0 auto',
                 padding: '28px 20px 0',
                 display: 'flex', flexDirection: 'column', gap: 28,
-                transition: 'max-width 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
               }}>
                 {msgs.map(m => (
-                  <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Msg m={m} fresh={newIds.has(m.id)} />
-                    </div>
-                    {hasCharts && (
-                      <div style={{ width: 300, flexShrink: 0 }}>
-                        {m.chartId && charts[m.chartId] && (
-                          <ChartCard
-                            chart={charts[m.chartId]}
-                            timestamp={chartTimestamps[m.chartId]}
-                            onExpand={() => setExpandedChartId(m.chartId!)}
-                          />
-                        )}
+                  <div key={m.id} style={{ position: 'relative' }}>
+                    <Msg m={m} fresh={newIds.has(m.id)} />
+                    {hasCharts && m.chartId && charts[m.chartId] && (
+                      <div style={{
+                        position: 'absolute',
+                        left: 'calc(100% + 24px)',
+                        top: 0,
+                        width: 300,
+                      }}>
+                        <ChartCard
+                          chart={charts[m.chartId]}
+                          timestamp={chartTimestamps[m.chartId]}
+                          onExpand={() => setExpandedChartId(m.chartId!)}
+                        />
                       </div>
                     )}
                   </div>
                 ))}
-                {typing && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 24 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}><Typing /></div>
-                    {hasCharts && <div style={{ width: 300, flexShrink: 0 }} />}
-                  </div>
-                )}
+                {typing && <Typing />}
               </div>
             )
           }
