@@ -1,6 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
+import Groq from 'groq-sdk';
 
-const client = new Anthropic();
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const SYSTEM = `You are Roger, a strategic AI assistant built by Estuaire. You help business teams analyze data, plan strategy, and make sharp decisions.
 
@@ -24,26 +24,25 @@ export async function POST(req: Request) {
     messages: { role: string; content: string }[];
   };
 
-  const stream = await client.messages.stream({
-    model: 'claude-sonnet-4-6',
+  const stream = await client.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
     max_tokens: 1024,
-    system: SYSTEM,
-    messages: messages.map(m => ({
-      role: m.role === 'agent' ? 'assistant' as const : 'user' as const,
-      content: m.content,
-    })),
+    stream: true,
+    messages: [
+      { role: 'system', content: SYSTEM },
+      ...messages.map(m => ({
+        role: m.role === 'agent' ? 'assistant' as const : 'user' as const,
+        content: m.content,
+      })),
+    ],
   });
 
   const readable = new ReadableStream({
     async start(controller) {
       try {
         for await (const chunk of stream) {
-          if (
-            chunk.type === 'content_block_delta' &&
-            chunk.delta.type === 'text_delta'
-          ) {
-            controller.enqueue(new TextEncoder().encode(chunk.delta.text));
-          }
+          const text = chunk.choices[0]?.delta?.content;
+          if (text) controller.enqueue(new TextEncoder().encode(text));
         }
       } finally {
         controller.close();
