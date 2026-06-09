@@ -1,7 +1,6 @@
 'use client';
 
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
-import RichText from './RichText';
 import type { ChartSpec } from './ChartPanel';
 
 // ── AI summary generator ───────────────────────────────────────────────────
@@ -78,22 +77,17 @@ export default function ChartCard({
       </div>
 
       {/* Mini bar sparkline */}
-      <div style={{ height: 72, padding: '10px 6px 0' }}>
+      <div style={{ height: 52, padding: '8px 6px 0' }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chart.data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap="25%">
-            <Bar dataKey="revenue" fill="oklch(37% 0.185 263)" radius={[3, 3, 0, 0]} animationDuration={600} />
+            <Bar dataKey="revenue" fill="oklch(37% 0.185 263)" radius={[2, 2, 0, 0]} animationDuration={600} />
             <XAxis dataKey="label" tick={false} axisLine={false} tickLine={false} height={0} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      {/* AI-generated summary */}
-      <div style={{ padding: '10px 14px 0', fontSize: '0.75rem', lineHeight: 1.55, color: 'oklch(36% 0.008 263)' }}>
-        <RichText content={generateSummary(chart)} />
-      </div>
-
       {/* Expand button */}
-      <div style={{ padding: '10px 14px 14px' }}>
+      <div style={{ padding: '8px 14px 12px' }}>
         <button
           onClick={onExpand}
           style={{
