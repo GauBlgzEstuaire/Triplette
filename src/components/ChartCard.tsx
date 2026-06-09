@@ -89,7 +89,7 @@ export default function ChartCard({
       }}
     >
       {/* Header */}
-      <div style={{ padding: '12px 14px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: '16px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <p style={{
             margin: 0, fontSize: '0.75rem', fontWeight: 650,
@@ -116,7 +116,7 @@ export default function ChartCard({
       </div>
 
       {/* Full chart */}
-      <div style={{ height: 190, padding: '0 6px 0 0' }}>
+      <div style={{ height: 190, padding: '0 12px 0 4px' }}>
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chart.data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <defs>
@@ -206,7 +206,7 @@ export default function ChartCard({
       </div>
 
       {/* Expand button */}
-      <div style={{ padding: '8px 14px 12px' }}>
+      <div style={{ padding: '10px 18px 16px' }}>
         <button
           onClick={onExpand}
           style={{
