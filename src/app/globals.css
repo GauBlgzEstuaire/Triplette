@@ -55,11 +55,12 @@ textarea::-webkit-scrollbar { display: none; }
 
 /* ── Input focus glow ─────────────────────────────────────────────────────── */
 /*
- * Two pseudo-element backlights: electric blue (::before) + blush pink (::after).
- * Only opacity animates — GPU compositor, zero repaint cost.
- * Irrational ratio 3.7s / 5.3s ≈ 0.698 means they never align: genuine beating,
- * not scripted randomness. Blue starts at peak, pink at trough — immediate conflict
- * from frame one creates aurora-like color interference.
+ * Two blurred ring pseudo-elements (border, no fill) hug the input outline.
+ * The frosted glass hides their interior — only the rim glows.
+ * opacity + scale both animate on the GPU compositor: no repaints.
+ * scale creates the "liquid expanding / draining" sensation.
+ * 3.7s / 5.3s (ratio ≈ 0.698, irrational) → genuine sine-wave interference,
+ * not a scripted pattern. Opposite start phases: immediate color conflict.
  */
 
 .glass-input-wrap {
@@ -71,41 +72,44 @@ textarea::-webkit-scrollbar { display: none; }
 .glass-input-wrap::after {
   content: '';
   position: absolute;
+  background: transparent;
   z-index: -1;
   opacity: 0;
   pointer-events: none;
-  /* Fade out smoothly when focus leaves; animation overrides this when active */
-  transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  transform-origin: center;
+  /* Smooth fade-out when focus leaves; animation replaces this when active */
+  transition: opacity 700ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Electric blue — tight inner bloom */
+/* Electric blue — tight ring, minimal blur: concentrated at the outline */
 .glass-input-wrap::before {
-  inset: -10px;
-  border-radius: 22px;
-  background: oklch(62% 0.22 263);
-  filter: blur(22px);
+  inset: -5px;
+  border-radius: 18px;
+  border: 10px solid oklch(65% 0.22 263 / 0.88);
+  filter: blur(11px);
 }
 
-/* Blush pink — wide outer halo */
+/* Blush pink — slightly wider ring, softer blur: outer halo */
 .glass-input-wrap::after {
-  inset: -20px;
-  border-radius: 32px;
-  background: oklch(76% 0.16 345);
-  filter: blur(42px);
+  inset: -7px;
+  border-radius: 20px;
+  border: 10px solid oklch(78% 0.16 345 / 0.88);
+  filter: blur(17px);
 }
 
+/* Blue: peaks bright+expanded, drains dim+contracted. Pink: exact opposite phase. */
 @keyframes glow-blue {
-  0%, 100% { opacity: 0.92; }
-  50%       { opacity: 0.18; }
+  0%, 100% { opacity: 0.92; transform: scale(1.025); }
+  50%       { opacity: 0.12; transform: scale(0.968); }
 }
 
 @keyframes glow-pink {
-  0%, 100% { opacity: 0.16; }
-  50%       { opacity: 0.88; }
+  0%, 100% { opacity: 0.12; transform: scale(0.968); }
+  50%       { opacity: 0.88; transform: scale(1.025); }
 }
 
 .glass-input-wrap.glow-active::before {
-  transition: none; /* animation owns opacity from here */
+  transition: none;
   animation: glow-blue 3.7s ease-in-out infinite;
 }
 
@@ -115,14 +119,14 @@ textarea::-webkit-scrollbar { display: none; }
 }
 
 .glass-input-wrap.glow-active {
-  background: oklch(100% 0 0 / 0.18);
-  border: 1px solid oklch(100% 0 0 / 0.38);
-  box-shadow: inset 0 1px 0 oklch(100% 0 0 / 0.50);
+  background: oklch(100% 0 0 / 0.28);
+  border: 1px solid oklch(100% 0 0 / 0.42);
+  box-shadow: 0 14px 44px oklch(0% 0 0 / 0.22), inset 0 1px 0 oklch(100% 0 0 / 0.58);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glass-input-wrap.glow-active::before { opacity: 0.75; animation: none; }
-  .glass-input-wrap.glow-active::after  { opacity: 0.45; animation: none; }
+  .glass-input-wrap.glow-active::before { opacity: 0.80; transform: none; animation: none; }
+  .glass-input-wrap.glow-active::after  { opacity: 0.52; transform: none; animation: none; }
 }
 ::-webkit-scrollbar         { width: 3px; }
 ::-webkit-scrollbar-track   { background: transparent; }

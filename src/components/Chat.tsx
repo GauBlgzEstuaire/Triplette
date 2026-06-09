@@ -567,14 +567,14 @@ function Input({ value, onChange, onSend, thinking }: {
         style={{
           maxWidth: 680, margin: '0 auto',
           display: 'flex', alignItems: 'center', gap: 8,
-          backdropFilter: 'blur(28px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+          backdropFilter: 'blur(48px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(48px) saturate(140%)',
           borderRadius: 14, padding: '0 10px 0 16px', minHeight: 50,
           // Border/background/shadow omitted when focused — CSS .glow-active owns them
           ...(!focused ? {
-            background: 'oklch(100% 0 0 / 0.13)',
+            background: 'oklch(100% 0 0 / 0.22)',
             border: '1px solid oklch(100% 0 0 / 0.28)',
-            boxShadow: 'inset 0 1px 0 oklch(100% 0 0 / 0.3), 0 4px 20px oklch(0% 0 0 / 0.14)',
+            boxShadow: '0 10px 36px oklch(0% 0 0 / 0.18), inset 0 1px 0 oklch(100% 0 0 / 0.35)',
             transition: 'border-color 0.15s, box-shadow 0.15s',
           } : {}),
         }}
